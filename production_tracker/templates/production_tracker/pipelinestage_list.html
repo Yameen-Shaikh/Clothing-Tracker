@@ -1,0 +1,28 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Pipeline Stages</h1>
+    <a href="{% url 'pipelinestage_create' %}" class="button">Add New Pipeline Stage</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stage in pipeline_stages %}
+                <tr>
+                    <td>{{ stage.name }}</td>
+                    <td>
+                        <a href="{% url 'pipelinestage_update' stage.pk %}" class="button">Edit</a>
+                        <form action="{% url 'pipelinestage_delete' stage.pk %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="button" onclick="return confirm('Are you sure you want to delete this pipeline stage?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

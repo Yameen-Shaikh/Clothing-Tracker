@@ -1,0 +1,41 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Order ID: {{ order.id }}</h1>
+    <p><strong>Customer:</strong> {{ order.customer.name }}</p>
+    <p><strong>Order Placed On:</strong> {{ order.order_placed_on }}</p>
+    <p><strong>Completion Date:</strong> {{ order.completion_date|default:"N/A" }}</p>
+    <p><strong>Total Amount:</strong> {{ order.amount }}</p>
+    <p><strong>Invoice:</strong> {% if order.invoice %}<a href="{% url 'invoice_detail' order.invoice.pk %}">{{ order.invoice.invoice_number }}</a>{% else %}N/A{% endif %}</p>
+
+    <h2>Order Status: {{ order.status }}</h2>
+    <form action="{% url 'update_order_status' order.pk %}" method="post">
+        {% csrf_token %}
+        {{ order_status_form.as_p }}
+        <button type="submit">Update Order Status</button>
+    </form>
+
+    <h2>Current Stage: {{ current_stage.stage.name|default:"N/A" }}</h2>
+    <p><strong>Assigned Vendor:</strong> {{ current_stage.assigned_vendor.name|default:"N/A" }}</p>
+
+    <h2>Order Stages</h2>
+    <a href="{% url 'order_stage_manage' order.pk %}" class="button">Manage Pipeline Stages</a>
+    <table>
+        <thead>
+            <tr>
+                <th>Stage</th>
+                <th>Assigned Vendor</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stage in order.orderstage_set.all %}
+                <tr>
+                    <td>{{ stage.stage.name }}</td>
+                    <td>{{ stage.assigned_vendor.name|default:"N/A" }}</td>
+                    <td>{{ stage.status }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

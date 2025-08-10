@@ -1,0 +1,85 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Create New Order</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label for="customer-search-input">Customer:</label>
+            <input type="text" id="customer-search-input" placeholder="Search for a customer by name or phone...">
+            <div id="customer-search-results"></div>
+        </p>
+        <input type="hidden" name="customer" id="selected-customer-id">
+
+        <p>
+            <label for="measurement-select">Measurement:</label>
+            <select name="measurement" id="measurement-select" disabled>
+                <option value="">-- Select a Measurement --</option>
+            </select>
+        </p>
+
+        {{ form.as_p }}
+        <button type="submit">Create Order</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const selectedCustomerId = document.getElementById('selected-customer-id');
+
+            const measurementSelect = document.getElementById('measurement-select');
+
+            function fetchMeasurements(customerId) {
+                if (customerId) {
+                    fetch(`/api/measurement-search/?customer_id=${customerId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            measurementSelect.innerHTML = '<option value="">-- Select a Measurement --</option>';
+                            data.forEach(measurement => {
+                                const option = document.createElement('option');
+                                option.value = measurement.id;
+                                option.textContent = `${measurement.type} (ID: ${measurement.id})`;
+                                measurementSelect.appendChild(option);
+                            });
+                            measurementSelect.disabled = false;
+                        });
+                } else {
+                    measurementSelect.innerHTML = '<option value="">-- Select a Measurement --</option>';
+                    measurementSelect.disabled = true;
+                }
+            }
+
+            customerSearchInput.addEventListener('keyup', function() {
+                const query = customerSearchInput.value;
+                if (query.length > 2) {
+                    fetch(`/api/customer-search/?query=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            customerSearchResults.innerHTML = '';
+                            data.forEach(customer => {
+                                const customerDiv = document.createElement('div');
+                                customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                                customerDiv.style.cursor = 'pointer';
+                                customerDiv.addEventListener('click', function() {
+                                    selectedCustomerId.value = customer.id;
+                                    customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                                    customerSearchResults.innerHTML = '';
+                                    fetchMeasurements(customer.id); // Fetch measurements for selected customer
+                                });
+                                customerSearchResults.appendChild(customerDiv);
+                            });
+                        });
+                } else {
+                    selectedCustomerId.value = '';
+                    customerSearchResults.innerHTML = '';
+                    fetchMeasurements(null); // Clear measurements if no customer selected
+                }
+            });
+
+            // Initial state: measurement dropdown disabled
+            measurementSelect.disabled = true;
+        });
+    </script>
+{% endblock %}

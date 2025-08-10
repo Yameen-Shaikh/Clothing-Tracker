@@ -1,0 +1,51 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Manage Pipeline Stages for Order ID: {{ order.id }}</h1>
+    <p><strong>Customer:</strong> {{ order.customer.name }}</p>
+
+    <h2>Add New Stage</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Stage</button>
+    </form>
+
+    <h2>Existing Stages</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Stage</th>
+                <th>Assigned Vendor</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stage in order_stages %}
+                <tr>
+                    <td>{{ stage.stage.name }}</td>
+                    <td>{{ stage.assigned_vendor.name|default:"N/A" }}</td>
+                    <td>
+                        <form action="{% url 'update_order_stage' stage.pk %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <select name="status">
+                                {% for value, label in stage.STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if stage.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <select name="assigned_vendor">
+                                {% for vendor in vendors %}
+                                    <option value="{{ vendor.pk }}" {% if stage.assigned_vendor.pk == vendor.pk %}selected{% endif %}>{{ vendor.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'order_detail' order.pk %}" class="button">Back to Order Detail</a>
+{% endblock %}

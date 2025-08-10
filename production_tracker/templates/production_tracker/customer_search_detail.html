@@ -1,0 +1,100 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Search and Edit Customer</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>
+        <label for="customer-search-input">Search Customer:</label>
+        <input type="text" id="customer-search-input" placeholder="Search by name or phone..." value="{% if customer %}{{ customer.name }} - {{ customer.phone }}{% endif %}">
+        <div id="customer-search-results" class="custom-search-results"></div>
+    </p>
+    <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}">
+
+    <div id="customer-details-section" style="{% if not customer %}display:none;{% endif %}">
+        <form method="post" id="customer-detail-form">
+            {% csrf_token %}
+            <input type="hidden" name="customer_id" value="{% if customer %}{{ customer.id }}{% endif %}">
+            {{ form.as_p }}
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const selectedCustomerId = document.getElementById('selected-customer-id');
+            const customerDetailsSection = document.getElementById('customer-details-section');
+            const customerDetailForm = document.getElementById('customer-detail-form');
+
+            // Function to load customer details into the form
+            function loadCustomerDetails(customerId) {
+                if (customerId) {
+                    window.location.href = `{% url 'customer_search_detail' %}?customer_id=${customerId}`;
+                } else {
+                    // Clear the form and hide details section if no customer is selected
+                    customerDetailForm.reset();
+                    customerDetailForm.querySelector('input[name="customer_id"]').value = '';
+                    customerDetailsSection.style.display = 'none';
+                }
+            }
+
+            // Initial display of details if a customer is already selected (e.g., after a save)
+            if (selectedCustomerId.value) {
+                customerDetailsSection.style.display = 'block';
+            }
+
+            customerSearchInput.addEventListener('keyup', function() {
+                const query = customerSearchInput.value;
+                if (query.length > 2) {
+                    fetch(`/api/customer-search/?query=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            customerSearchResults.innerHTML = '';
+                            data.forEach(customer => {
+                                const customerDiv = document.createElement('div');
+                                customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                                customerDiv.style.cursor = 'pointer';
+                                customerDiv.addEventListener('click', function() {
+                                    customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                                    customerSearchResults.innerHTML = '';
+                                    loadCustomerDetails(customer.id);
+                                });
+                                customerSearchResults.appendChild(customerDiv);
+                            });
+                        });
+                } else {
+                    customerSearchResults.innerHTML = '';
+                    // If search input is cleared, also clear the selected customer and form
+                    if (selectedCustomerId.value) {
+                        loadCustomerDetails(null);
+                    }
+                }
+            });
+
+            // Hide details section and clear form when search input is focused and a customer is selected
+            customerSearchInput.addEventListener('focus', function() {
+                if (selectedCustomerId.value) {
+                    customerDetailsSection.style.display = 'none';
+                    customerDetailForm.reset();
+                    selectedCustomerId.value = '';
+                    customerDetailForm.querySelector('input[name="customer_id"]').value = '';
+                }
+            });
+
+            // Display messages (e.g., success messages after save)
+            const messagesDiv = document.querySelector('.messages');
+            if (messagesDiv) {
+                alert(messagesDiv.textContent.trim());
+            }
+        });
+    </script>
+{% endblock %}

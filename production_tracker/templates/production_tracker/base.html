@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clothing Factory</title>
+    <link rel="stylesheet" href="{% static 'production_tracker/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>Clothing Factory</h2>
+            <ul>
+                <li><a href="{% url 'dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                {% if user.is_superuser %}
+                    <li><a href="{% url 'vendor_list' %}"><i class="fas fa-industry"></i> Vendors</a></li>
+                    <li><a href="{% url 'pipelinestage_list' %}"><i class="fas fa-project-diagram"></i> Pipeline Stages</a></li>
+                    <li><a href="{% url 'customer_list' %}"><i class="fas fa-users"></i> Customers</a></li>
+                {% else %}
+                    <li><a href="{% url 'order_list' %}"><i class="fas fa-clipboard-list"></i> Orders</a></li>
+                    <li><a href="{% url 'order_new' %}"><i class="fas fa-plus-circle"></i> New Order</a></li>
+                    <li><a href="{% url 'customer_new' %}"><i class="fas fa-user-plus"></i> New Customer</a></li>
+                    <li><a href="{% url 'customer_search_detail' %}"><i class="fas fa-search"></i> Search Customer</a></li>
+                    <li><a href="{% url 'measurement_list' %}"><i class="fas fa-ruler-combined"></i> Measurements</a></li>
+                    <li><a href="{% url 'measurement_create' %}"><i class="fas fa-plus-square"></i> New Measurement</a></li>
+                    <li><a href="{% url 'invoice_list' %}"><i class="fas fa-file-invoice-dollar"></i> Invoices</a></li>
+                {% endif %}
+            </ul>
+            <div class="auth-links">
+                {% if user.is_authenticated %}
+                    <p>Welcome, {{ user.username }}!</p>
+                    <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                {% endif %}
+            </div>
+        </aside>
+        <main class="main-content">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+</body>
+</html>

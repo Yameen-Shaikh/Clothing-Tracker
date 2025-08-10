@@ -1,0 +1,85 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Measurements</h1>
+
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="customer-search-input">Customer:</label>
+            <input type="text" id="customer-search-input" placeholder="Search customer..." value="{% if selected_customer_name %}{{ selected_customer_name }}{% endif %}">
+            <div id="customer-search-results"></div>
+            <input type="hidden" name="customer" id="selected-customer-id" value="{% if selected_customer_id %}{{ selected_customer_id }}{% endif %}">
+        </div>
+        <div class="filter-group">
+            <button type="submit">Filter</button>
+        </div>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for measurement in measurements %}
+                <tr>
+                    <td>{{ measurement.customer.name }}</td>
+                    <td>{{ measurement.measurement_type }}</td>
+                    <td>
+                        <a href="{% url 'measurement_detail' measurement.pk %}?view=true" class="button">View</a>
+                        <a href="{% url 'measurement_detail' measurement.pk %}" class="button">Edit</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">No measurements found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const selectedCustomerId = document.getElementById('selected-customer-id');
+            const filterForm = document.querySelector('.filter-form');
+
+            customerSearchInput.addEventListener('keyup', function() {
+                const query = customerSearchInput.value;
+                if (query.length > 2) {
+                    fetch(`/api/customer-search/?query=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            customerSearchResults.innerHTML = '';
+                            data.forEach(customer => {
+                                const customerDiv = document.createElement('div');
+                                customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                                customerDiv.style.cursor = 'pointer';
+                                customerDiv.addEventListener('click', function() {
+                                    selectedCustomerId.value = customer.id;
+                                    customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                                    customerSearchResults.innerHTML = '';
+                                    filterForm.submit(); // Submit form on customer selection
+                                });
+                                customerSearchResults.appendChild(customerDiv);
+                            });
+                        });
+                } else {
+                    selectedCustomerId.value = '';
+                    customerSearchResults.innerHTML = '';
+                }
+            });
+
+            filterForm.addEventListener('submit', function(event) {
+                // Prevent default form submission if customer search input is empty but a customer was previously selected
+                if (customerSearchInput.value === '' && selectedCustomerId.value !== '') {
+                    selectedCustomerId.value = ''; // Clear selected customer to show all measurements
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Create New Customer</h1>
+
+    <div style="display:none;">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Customer</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.messages li');
+            if (messages.length > 0) {
+                let messageText = '';
+                messages.forEach(function(message) {
+                    messageText += message.textContent + '\n';
+                });
+                alert(messageText);
+            }
+        });
+    </script>
+{% endblock %}

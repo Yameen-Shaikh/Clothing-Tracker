@@ -1,0 +1,111 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Orders</h1>
+
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label for="customer-search-input">Customer:</label>
+            <input type="text" id="customer-search-input" placeholder="Search customer..." value="{% if selected_customer_name %}{{ selected_customer_name }}{% endif %}">
+            <div id="customer-search-results"></div>
+            <input type="hidden" name="customer" id="selected-customer-id" value="{% if selected_customer_id %}{{ selected_customer_id }}{% endif %}">
+        </div>
+
+        <div class="filter-group">
+            <label for="status-filter">Status:</label>
+            <select name="status" id="status-filter">
+                <option value="All">All</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="start-date-filter">From:</label>
+            <input type="date" name="start_date" id="start-date-filter" value="{{ start_date }}">
+        </div>
+
+        <div class="filter-group">
+            <label for="end-date-filter">To:</label>
+            <input type="date" name="end_date" id="end-date-filter" value="{{ end_date }}">
+        </div>
+
+        <div class="filter-group">
+            <button type="submit">Filter</button>
+        </div>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Order Placed On</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.customer.name }}</td>
+                    <td>{{ order.order_placed_on }}</td>
+                    <td>{{ order.measurement.measurement_type|default:"N/A" }}</td>
+                    <td>{{ order.status }}</td>
+                    <td><a href="{% url 'order_detail' order.pk %}" class="button">View Details</a></td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No orders found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const selectedCustomerId = document.getElementById('selected-customer-id');
+            const filterForm = document.querySelector('.filter-form');
+
+            customerSearchInput.addEventListener('keyup', function() {
+                const query = customerSearchInput.value;
+                if (query.length > 2) {
+                    fetch(`/api/customer-search/?query=${query}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            customerSearchResults.innerHTML = '';
+                            data.forEach(customer => {
+                                const customerDiv = document.createElement('div');
+                                customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                                customerDiv.style.cursor = 'pointer';
+                                customerDiv.addEventListener('click', function() {
+                                    selectedCustomerId.value = customer.id;
+                                    customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                                    customerSearchResults.innerHTML = '';
+                                    
+                                });
+                                customerSearchResults.appendChild(customerDiv);
+                            });
+                        });
+                } else {
+                    selectedCustomerId.value = '';
+                    customerSearchResults.innerHTML = '';
+                    // Optionally, submit form to clear customer filter if search input is cleared
+                    // filterForm.submit(); 
+                }
+            });
+
+            // Handle form submission when other filters change
+            filterForm.addEventListener('change', function(event) {
+                if (event.target.name !== 'customer') { // Prevent double submission if customer search triggers change
+                    filterForm.submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}

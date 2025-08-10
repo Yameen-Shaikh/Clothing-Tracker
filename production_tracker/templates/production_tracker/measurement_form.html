@@ -1,0 +1,112 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label for="customer-search-input">Customer:</label>
+            {% if read_only %}
+                <input type="text" value="{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}" readonly>
+            {% else %}
+                <input type="text" id="customer-search-input" placeholder="Search for a customer by name or phone..." value="{% if form.instance.customer %}{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}{% endif %}">
+                <div id="customer-search-results"></div>
+            {% endif %}
+        </p>
+        <input type="hidden" name="customer" id="selected-customer-id" value="{% if form.instance.customer %}{{ form.instance.customer.id }}{% endif %}">
+
+        <p>
+            {{ form.measurement_type.label_tag }}
+            {{ form.measurement_type }}
+        </p>
+
+        {% for field in form %}
+            {% if field.name != 'customer' and field.name != 'measurement_type' %}
+                <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+                    {% if field.errors %}
+                        <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </p>
+            {% endif %}
+        {% endfor %}
+
+        {% if not read_only %}
+            <button type="submit">Save Measurement</button>
+        {% endif %}
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const selectedCustomerId = document.getElementById('selected-customer-id');
+            const measurementTypeSelect = document.getElementById('id_measurement_type');
+
+            // Function to fetch and set customer details
+            function setCustomer(customerId) {
+                fetch(`/api/customer-search/?query=${customerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            const customer = data[0]; // Assuming the first result is the correct one
+                            selectedCustomerId.value = customer.id;
+                            if (customerSearchInput) {
+                                customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                            }
+                        }
+                    });
+            }
+
+            // Check for customer_id in URL query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const customerIdFromUrl = urlParams.get('customer_id');
+            if (customerIdFromUrl) {
+                setCustomer(customerIdFromUrl);
+            }
+
+            if (customerSearchInput) { // Only add event listener if input exists (not in read-only mode)
+                customerSearchInput.addEventListener('keyup', function() {
+                    const query = customerSearchInput.value;
+                    if (query.length > 2) {
+                        fetch(`/api/customer-search/?query=${query}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                customerSearchResults.innerHTML = '';
+                                data.forEach(customer => {
+                                    const customerDiv = document.createElement('div');
+                                    customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                                    customerDiv.style.cursor = 'pointer';
+                                    customerDiv.addEventListener('click', function() {
+                                        selectedCustomerId.value = customer.id;
+                                        customerSearchInput.value = `${customer.name} - ${customer.phone}`;
+                                        customerSearchResults.innerHTML = '';
+                                    });
+                                    customerSearchResults.appendChild(customerDiv);
+                                });
+                            });
+                    } else {
+                        selectedCustomerId.value = '';
+                        customerSearchResults.innerHTML = '';
+                    }
+                });
+            }
+
+            // Disable measurement_type select if in read-only mode
+            if ({{ read_only|lower }} && measurementTypeSelect) {
+                measurementTypeSelect.disabled = true;
+            }
+        });
+    </script>
+{% endblock %}

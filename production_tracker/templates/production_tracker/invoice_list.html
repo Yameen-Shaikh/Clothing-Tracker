@@ -1,0 +1,29 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Invoices</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Order</th>
+                <th>Invoice Number</th>
+                <th>Amount</th>
+                <th>Date Issued</th>
+                <th>Date Due</th>
+                <th>Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+                <tr>
+                    <td>{{ invoice.order.order_number }}</td>
+                    <td>{{ invoice.invoice_number }}</td>
+                    <td>{{ invoice.amount }}</td>
+                    <td>{{ invoice.date_issued }}</td>
+                    <td>{{ invoice.date_due }}</td>
+                    <td>{{ invoice.paid }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

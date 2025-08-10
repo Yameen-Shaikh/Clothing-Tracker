@@ -4,8 +4,8 @@ from .views import (
     OrderListView, OrderDetailView, UpdateOrderStageView, OrderCreateView, UpdateOrderStatusView, OrderStageManageView,
     CustomerListView, CustomerCreateView, CustomerSearchView, CustomerDetailUpdateView,
     MeasurementListView, MeasurementDetailView, MeasurementSearchView,
-    VendorListView, VendorCreateView, VendorUpdateView, VendorDeleteView,
-    PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, PipelineStageDeleteView, InvoiceListView,
+    VendorListView, VendorCreateView, VendorUpdateView,
+    PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView,
     CustomLoginView
 )
 from django.contrib.auth.views import LogoutView
@@ -33,10 +33,8 @@ urlpatterns = [
     path('vendors/', VendorListView.as_view(), name='vendor_list'),
     path('vendors/create/', VendorCreateView.as_view(), name='vendor_create'),
     path('vendors/<int:pk>/update/', VendorUpdateView.as_view(), name='vendor_update'),
-    path('vendors/<int:pk>/delete/', VendorDeleteView.as_view(), name='vendor_delete'),
     path('pipeline-stages/', PipelineStageListView.as_view(), name='pipelinestage_list'),
     path('pipeline-stages/create/', PipelineStageCreateView.as_view(), name='pipelinestage_create'),
     path('pipeline-stages/<int:pk>/update/', PipelineStageUpdateView.as_view(), name='pipelinestage_update'),
-    path('pipeline-stages/<int:pk>/delete/', PipelineStageDeleteView.as_view(), name='pipelinestage_delete'),
     path('invoices/', InvoiceListView.as_view(), name='invoice_list'),
 ]

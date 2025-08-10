@@ -314,16 +314,6 @@ class VendorListView(LoginRequiredMixin, ListView):
     template_name = 'production_tracker/vendor_list.html'
     context_object_name = 'vendors'
 
-
-class VendorDeleteView(SuperuserRequiredMixin, View):
-    def post(self, request, pk):
-        vendor = get_object_or_404(Vendor, pk=pk)
-        vendor.delete()
-        messages.success(request, 'Vendor deleted successfully!')
-        return redirect('vendor_list')
-
-
-
 class PipelineStageCreateView(SuperuserRequiredMixin, CreateView):
     model = PipelineStage
     form_class = PipelineStageForm
@@ -350,16 +340,6 @@ class PipelineStageListView(LoginRequiredMixin, ListView):
     model = PipelineStage
     template_name = 'production_tracker/pipelinestage_list.html'
     context_object_name = 'pipeline_stages'
-
-
-class PipelineStageDeleteView(SuperuserRequiredMixin, View):
-
-    def post(self, request, pk):
-        pipeline_stage = get_object_or_404(PipelineStage, pk=pk)
-        pipeline_stage.delete()
-        messages.success(request, 'Pipeline Stage deleted successfully!')
-        return redirect('pipelinestage_list')
-
 
 class InvoiceListView(LoginRequiredMixin, ListView):
     model = Invoice

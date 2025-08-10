@@ -1,40 +1,33 @@
-{% extends 'production_tracker/base.html' %}
-
-{% block content %}
-    <h1>Vendors</h1>
-    <a href="{% url 'vendor_create' %}" class="button">Add New Vendor</a>
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Phone Numbers</th>
-                <th>Address</th>
-                <th>Remark</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vendor in vendors %}
-                <tr>
-                    <td>{{ vendor.name }}</td>
-                    <td>{{ vendor.role.name }}</td>
-                    <td>
-                        {% for phone in vendor.phone_numbers %}
-                            {{ phone }}<br>
-                        {% endfor %}
-                    </td>
-                    <td>{{ vendor.address }}</td>
-                    <td>{{ vendor.remark }}</td>
-                    <td>
-                        <a href="{% url 'vendor_update' vendor.pk %}" class="button">Edit</a>
-                        <form action="{% url 'vendor_delete' vendor.pk %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="button" onclick="return confirm('Are you sure you want to delete this vendor?');">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% extends 'production_tracker/base.html' %} {% block content %}
+<h1>Vendors</h1>
+<a href="{% url 'vendor_create' %}" class="button">Add New Vendor</a>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Phone Numbers</th>
+      <th>Address</th>
+      <th>Remark</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for vendor in vendors %}
+    <tr>
+      <td>{{ vendor.name }}</td>
+      <td>{{ vendor.role.name }}</td>
+      <td>
+        {% for phone in vendor.phone_numbers %} {{ phone }}<br />
+        {% endfor %}
+      </td>
+      <td>{{ vendor.address }}</td>
+      <td>{{ vendor.remark }}</td>
+      <td>
+        <a href="{% url 'vendor_update' vendor.pk %}" class="button">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

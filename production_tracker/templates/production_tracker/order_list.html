@@ -87,7 +87,7 @@
                                     selectedCustomerId.value = customer.id;
                                     customerSearchInput.value = `${customer.name} - ${customer.phone}`;
                                     customerSearchResults.innerHTML = '';
-                                    
+                                    filterForm.submit();
                                 });
                                 customerSearchResults.appendChild(customerDiv);
                             });

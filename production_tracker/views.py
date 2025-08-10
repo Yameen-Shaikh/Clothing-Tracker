@@ -6,6 +6,8 @@ from django.urls import reverse_lazy
 from .models import Order, OrderStage, Customer, Measurement, Vendor, PipelineStage, Invoice
 from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
@@ -247,7 +249,6 @@ class UpdateOrderStatusView(LoginRequiredMixin, View):
             form.save()
         return redirect('order_detail', pk=order.pk)
 
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
@@ -406,13 +407,15 @@ class MeasurementDetailView(LoginRequiredMixin, View):
         if form.is_valid():
             customer_id = request.POST.get('customer')
             if not customer_id:
-                form.add_error(None, 'Please select a customer.')
-                return render(request, self.template_name, {'form': form, 'title': "Create New Measurement" if not pk else "Edit Measurement"})
-            
+                form.add_error('customer', 'Please select a customer.')
+                title = "Create New Measurement" if not pk else "Edit Measurement"
+                return render(request, self.template_name, {'form': form, 'title': title})
+
             customer = get_object_or_404(Customer, pk=customer_id)
-            measurement_instance = form.save(commit=False)
-            measurement_instance.customer = customer
-            measurement_instance.save()
+            measurement = form.save(commit=False)
+            measurement.customer = customer
+            measurement.save()
+            messages.success(request, f'Measurement for {customer.name} saved successfully.')
             return redirect(self.success_url)
         else:
             title = "Create New Measurement" if not pk else "Edit Measurement"

@@ -216,7 +216,7 @@ form textarea {
   border: 1px solid var(--dark-gold);
   border-radius: 5px;
   box-sizing: border-box;
-  font-size: 1px;
+  font-size: 1em;
   background-color: var(--cream-light);
   color: var(--text-dark);
 }

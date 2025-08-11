@@ -33,7 +33,35 @@ class Measurement(models.Model):
     ]
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     measurement_type = models.CharField(max_length=20, choices=MEASUREMENT_CHOICES)
-    value = models.JSONField(blank=True, null=True, help_text="Stores measurement values in JSON format.")
+
+    # Common measurements
+    height = models.FloatField(null=True, blank=True)
+    weight = models.FloatField(null=True, blank=True)
+    chest = models.FloatField(null=True, blank=True)
+    waist = models.FloatField(null=True, blank=True)
+    hips = models.FloatField(null=True, blank=True)
+
+    # Shirt/Blouse/Kurta etc. measurements
+    neck = models.FloatField(null=True, blank=True)
+    sleeve_length = models.FloatField(null=True, blank=True)
+    bicep = models.FloatField(null=True, blank=True)
+    wrist = models.FloatField(null=True, blank=True)
+    shoulder_width = models.FloatField(null=True, blank=True)
+    shirt_length = models.FloatField(null=True, blank=True)
+
+    # Pant/Trouser/Pajama etc. measurements
+    inseam = models.FloatField(null=True, blank=True)
+    outseam = models.FloatField(null=True, blank=True)
+    thigh = models.FloatField(null=True, blank=True)
+    knee = models.FloatField(null=True, blank=True)
+    ankle = models.FloatField(null=True, blank=True)
+    pant_length = models.FloatField(null=True, blank=True)
+
+    # Suit/Jacket/Coat etc. measurements
+    jacket_length = models.FloatField(null=True, blank=True)
+
+    # Dress measurements
+    dress_length = models.FloatField(null=True, blank=True)
 
 class PipelineStage(models.Model):
     id = models.SmallAutoField(primary_key=True)
@@ -66,6 +94,7 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_placed_on = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
+    specifications = models.TextField(blank=True)
     completion_date = models.DateField(null=True, blank=True, help_text="Date when the order was completed.")
     amount = models.IntegerField(default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
@@ -87,6 +116,7 @@ class OrderStage(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
+    remark = models.TextField(blank=True)
 
 class Invoice(models.Model):
     id = models.AutoField(primary_key=True)

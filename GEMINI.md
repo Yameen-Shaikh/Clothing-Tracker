@@ -20,8 +20,26 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 ### Measurement
 - `id`: AutoField (Primary Key)
 - `customer`: ForeignKey to `Customer` (on_delete=models.CASCADE)
-- `measurement_type`: CharField (max_length=20, choices=[('Pant', 'Pant'), ('Shirt', 'Shirt'), ('Suite', 'Suite')])
-- `value`: JSONField (blank=True, null=True, help_text="Stores measurement values in JSON format.")
+- `measurement_type`: CharField (max_length=20, choices=[('Pant', 'Pant'), ('Shirt', 'Shirt'), ('Suite', 'Suite'), ('Jacket', 'Jacket'), ('Trouser', 'Trouser'), ('Blouse', 'Blouse'), ('Skirt', 'Skirt'), ('Dress', 'Dress'), ('Coat', 'Coat'), ('Vest', 'Vest'), ('Kurta', 'Kurta'), ('Pajama', 'Pajama'), ('Sherwani', 'Sherwani'), ('Lehenga', 'Lehenga'), ('Saree Blouse', 'Saree Blouse'), ('Salwar Kameez', 'Salwar Kameez')])
+- `height`: FloatField (null=True, blank=True)
+- `weight`: FloatField (null=True, blank=True)
+- `chest`: FloatField (null=True, blank=True)
+- `waist`: FloatField (null=True, blank=True)
+- `hips`: FloatField (null=True, blank=True)
+- `neck`: FloatField (null=True, blank=True)
+- `sleeve_length`: FloatField (null=True, blank=True)
+- `bicep`: FloatField (null=True, blank=True)
+- `wrist`: FloatField (null=True, blank=True)
+- `shoulder_width`: FloatField (null=True, blank=True)
+- `shirt_length`: FloatField (null=True, blank=True)
+- `inseam`: FloatField (null=True, blank=True)
+- `outseam`: FloatField (null=True, blank=True)
+- `thigh`: FloatField (null=True, blank=True)
+- `knee`: FloatField (null=True, blank=True)
+- `ankle`: FloatField (null=True, blank=True)
+- `pant_length`: FloatField (null=True, blank=True)
+- `jacket_length`: FloatField (null=True, blank=True)
+- `dress_length`: FloatField (null=True, blank=True)
 
 ### VendorRole
 - `id`: SmallAutoField (Primary Key)
@@ -45,6 +63,9 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `order_placed_on`: DateField
 - `status`: CharField (max_length=10)
 - `completion_date`: DateField (null=True, blank=True, help_text="Date when the order was completed.")
+- `specifications`: TextField (blank=True)
+- `crocky`: BinaryField (null=True, blank=True)
+- `crocky_mimetype`: CharField (max_length=50, null=True, blank=True)
 - `amount`: IntegerField (default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
 - `invoice`: ForeignKey to `Invoice` (on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
@@ -56,6 +77,7 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `start_date`: DateField
 - `end_date`: DateField (null=True, blank=True)
 - `status`: CharField (max_length=10)
+- `remark`: TextField (blank=True)
 
 ### Invoice
 - `id`: AutoField (Primary Key)
@@ -90,6 +112,7 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `/order-stage/<int:pk>/update/`: `UpdateOrderStageView` (Update OrderStage status/vendor)
 - `/customers/`: `CustomerListView` (List all customers)
 - `/customers/new/`: `CustomerCreateView` (Create new customer)
+- `/customers/search-detail/`: `CustomerDetailUpdateView` (Search and edit customer)
 - `/measurements/`: `MeasurementListView` (List all measurements)
 - `/measurements/new/`: `MeasurementCreateView` (Create new measurement, with customer search).
 - `/vendor-roles/`: `VendorRoleListView` (List all vendor roles)
@@ -107,6 +130,7 @@ All views are protected by `LoginRequiredMixin`.
 - **Customers:**
     - `CustomerListView` (`customer_list.html`): Lists all customers.
     - `CustomerCreateView` (`customer_form.html`): Form for creating new customers.
+    - `CustomerDetailUpdateView` (`customer_search_detail.html`): Search for and edit existing customers.
 - **Measurements:**
     - `MeasurementListView` (`measurement_list.html`): Lists all measurements.
     - `MeasurementCreateView` (`measurement_form.html`): Form for creating new measurements with customer search.
@@ -127,6 +151,14 @@ All views are protected by `LoginRequiredMixin`.
 - Upon successful login, JWT access and refresh tokens are generated and stored in the user's session.
 - All server-side rendered views require authentication via `LoginRequiredMixin`.
 - Logout functionality is available.
+
+## Recent Changes
+- **Customer Search and Edit:**
+    - Replaced on-page success messages with popup alerts for a cleaner user experience.
+    - Themed the customer search input to match the application's Mughal theme.
+    - Increased the width of the customer search input to ensure the placeholder text is fully visible.
+- **Error Fixes:**
+    - Resolved an error in the customer search/edit page that occurred when a customer was not selected.
 
 ## Next Steps/Pending Actions
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

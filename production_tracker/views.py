@@ -83,7 +83,7 @@ class MeasurementSearchView(LoginRequiredMixin, View):
             )
         
         measurements = measurements.select_related('customer')
-        results = [{'id': m.id, 'customer_name': m.customer.name, 'type': m.measurement_type, 'value': m.value} for m in measurements]
+        results = [{'id': m.id, 'customer_name': m.customer.name, 'type': m.measurement_type} for m in measurements]
         return JsonResponse(results, safe=False)
 
 

@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Create New Order</h1>
     
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <p>
             <label for="customer-search-input">Customer:</label>

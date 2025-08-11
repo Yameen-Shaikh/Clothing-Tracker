@@ -18,6 +18,7 @@
                 <th>Stage</th>
                 <th>Assigned Vendor</th>
                 <th>Status</th>
+                <th>Remark</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -26,6 +27,7 @@
                 <tr>
                     <td>{{ stage.stage.name }}</td>
                     <td>{{ stage.assigned_vendor.name|default:"N/A" }}</td>
+                    <td>{{ stage.remark|default:"N/A" }}</td>
                     <td>
                         <form action="{% url 'update_order_stage' stage.pk %}" method="post" style="display:inline;">
                             {% csrf_token %}

@@ -91,7 +91,7 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `/customers/`: `CustomerListView` (List all customers)
 - `/customers/new/`: `CustomerCreateView` (Create new customer)
 - `/measurements/`: `MeasurementListView` (List all measurements)
-- `/measurements/new/`: `MeasurementCreateView` (Create new measurement)
+- `/measurements/new/`: `MeasurementCreateView` (Create new measurement, with customer search).
 - `/vendor-roles/`: `VendorRoleListView` (List all vendor roles)
 - `/vendors/`: `VendorListView` (List all vendors)
 - `/pipeline-stages/`: `PipelineStageListView` (List all pipeline stages)
@@ -101,15 +101,15 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 All views are protected by `LoginRequiredMixin`.
 - **Dashboard:** `DashboardView` (`dashboard.html`) displays analytics (order status, invoices, recent orders, vendor/customer counts, stages in progress) with Chart.js graphs.
 - **Orders:**
-    - `OrderListView` (`order_list.html`): Lists all orders with status filtering (Pending, In Progress, Completed).
+    - `OrderListView` (`order_list.html`): Lists all orders with status and customer filtering (Pending, In Progress, Completed).
     - `OrderDetailView` (`order_detail.html`): Displays single order details, including associated `OrderStage` and `Particulars` records. Allows updating existing `OrderStage` status/vendor and adding new `OrderStage` records via forms.
-    - `OrderCreateView` (`order_form.html`): Form for creating new orders.
+    - `OrderCreateView` (`order_form.html`): Form for creating new orders with customer search.
 - **Customers:**
     - `CustomerListView` (`customer_list.html`): Lists all customers.
     - `CustomerCreateView` (`customer_form.html`): Form for creating new customers.
 - **Measurements:**
     - `MeasurementListView` (`measurement_list.html`): Lists all measurements.
-    - `MeasurementCreateView` (`measurement_form.html`): Form for creating new measurements.
+    - `MeasurementCreateView` (`measurement_form.html`): Form for creating new measurements with customer search.
 - **Other List Views:** `VendorRoleListView`, `VendorListView`, `PipelineStageListView`, `InvoiceListView` with corresponding templates.
 
 ## UI/UX Theme

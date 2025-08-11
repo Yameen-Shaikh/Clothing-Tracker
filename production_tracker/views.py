@@ -26,7 +26,15 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
             form = self.form_class(instance=customer)
         else:
             form = self.form_class()
-        return render(request, self.template_name, {'form': form, 'customer': customer})
+        
+        # Check for success message
+        success_message = request.session.pop('success_message', None)
+        
+        return render(request, self.template_name, {
+            'form': form, 
+            'customer': customer,
+            'success_message': success_message
+        })
 
     def post(self, request, *args, **kwargs):
         customer_id = request.POST.get('customer_id')
@@ -39,8 +47,8 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
 
         if form.is_valid():
             form.save()
-            messages.success(request, 'Customer details updated successfully!')
-            return redirect('customer_search_detail')
+            request.session['success_message'] = 'Customer details updated successfully!'
+            return redirect(request.path_info + f"?customer_id={customer.id if customer else ''}")
         else:
             return render(request, self.template_name, {'form': form, 'customer': customer})
 from datetime import date
@@ -379,7 +387,13 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         customer = form.save()
         messages.success(self.request, f'Customer {customer.name} added successfully.')
+        self.request.session['success_message'] = f'Customer {customer.name} added successfully.'
         return redirect(self.success_url)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['success_message'] = self.request.session.pop('success_message', None)
+        return context
 
 class MeasurementDetailView(LoginRequiredMixin, View):
     template_name = 'production_tracker/measurement_form.html'

@@ -3,29 +3,24 @@
 {% block content %}
     <h1>Search and Edit Customer</h1>
 
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    <p>
-        <label for="customer-search-input">Search Customer:</label>
-        <input type="text" id="customer-search-input" placeholder="Search by name or phone..." value="{% if customer %}{{ customer.name }} - {{ customer.phone }}{% endif %}">
-        <div id="customer-search-results" class="custom-search-results"></div>
-    </p>
+    <form class="filter-form">
+        <div class="filter-group">
+            <label for="customer-search-input">Search Customer:</label>
+            <input type="text" id="customer-search-input" placeholder="Search by name or phone..." value="{% if customer %}{{ customer.name }} - {{ customer.phone }}{% endif %}">
+            <div id="customer-search-results" class="custom-search-results"></div>
+        </div>
+    </form>
     <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}">
-
-    <div id="customer-details-section" style="{% if not customer %}display:none;{% endif %}">
+    {% if customer %}
+    <div id="customer-details-section">
         <form method="post" id="customer-detail-form">
             {% csrf_token %}
-            <input type="hidden" name="customer_id" value="{% if customer %}{{ customer.id }}{% endif %}">
+            <input type="hidden" name="customer_id" value="{{ customer.id }}">
             {{ form.as_p }}
             <button type="submit">Save Changes</button>
         </form>
     </div>
+    {% endif %}
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -90,10 +85,9 @@
                 }
             });
 
-            // Display messages (e.g., success messages after save)
-            const messagesDiv = document.querySelector('.messages');
-            if (messagesDiv) {
-                alert(messagesDiv.textContent.trim());
+            const successMessage = "{{ success_message|escapejs }}";
+            if (successMessage && successMessage !== 'None') {
+                alert(successMessage);
             }
         });
     </script>

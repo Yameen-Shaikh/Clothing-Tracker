@@ -30,7 +30,7 @@ class OrderForm(forms.ModelForm):
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['name', 'email', 'phone', 'address']
+        fields = ['name', 'email', 'phone', 'address', 'gender']
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')

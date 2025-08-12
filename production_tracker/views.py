@@ -19,13 +19,26 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         customer_id = request.GET.get('customer_id')
+        search_name = request.GET.get('search_name', '')
+        search_gender = request.GET.get('search_gender', '')
+        search_address = request.GET.get('search_address', '')
+
         customer = None
-        form = None
+        form = self.form_class()
+        customers = Customer.objects.none() # Start with an empty queryset
+
+        if search_name or search_gender or search_address:
+            customers = Customer.objects.all()
+            if search_name:
+                customers = customers.filter(Q(name__icontains=search_name) | Q(phone__icontains=search_name))
+            if search_gender:
+                customers = customers.filter(gender=search_gender)
+            if search_address:
+                customers = customers.filter(address__icontains=search_address)
+
         if customer_id:
             customer = get_object_or_404(Customer, pk=customer_id)
             form = self.form_class(instance=customer)
-        else:
-            form = self.form_class()
         
         # Check for success message
         success_message = request.session.pop('success_message', None)
@@ -33,7 +46,12 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
         return render(request, self.template_name, {
             'form': form, 
             'customer': customer,
-            'success_message': success_message
+            'success_message': success_message,
+            'customers': customers, # Pass filtered customers to the template
+            'search_name': search_name,
+            'search_gender': search_gender,
+            'search_address': search_address,
+            'gender_choices': Customer.GENDER_CHOICES,
         })
 
     def post(self, request, *args, **kwargs):
@@ -50,7 +68,29 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
             request.session['success_message'] = 'Customer details updated successfully!'
             return redirect(request.path_info + f"?customer_id={customer.id if customer else ''}")
         else:
-            return render(request, self.template_name, {'form': form, 'customer': customer})
+            # Re-render the page with existing search parameters if form is invalid
+            search_name = request.POST.get('search_name', '')
+            search_gender = request.POST.get('search_gender', '')
+            search_address = request.POST.get('search_address', '')
+            customers = Customer.objects.none()
+            if search_name or search_gender or search_address:
+                customers = Customer.objects.all()
+                if search_name:
+                    customers = customers.filter(name__icontains=search_name)
+                if search_gender:
+                    customers = customers.filter(gender=search_gender)
+                if search_address:
+                    customers = customers.filter(address__icontains=search_address)
+
+            return render(request, self.template_name, {
+                'form': form, 
+                'customer': customer,
+                'customers': customers,
+                'search_name': search_name,
+                'search_gender': search_gender,
+                'search_address': search_address,
+                'gender_choices': Customer.GENDER_CHOICES,
+            })
 from datetime import date
 from django.contrib.auth.views import LoginView
 from rest_framework_simplejwt.tokens import RefreshToken

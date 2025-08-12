@@ -3,16 +3,43 @@
 {% block content %}
     <h1>Search and Edit Customer</h1>
 
-    <form class="filter-form">
+    <form class="filter-form" method="get">
         <div class="filter-group">
-            <label for="customer-search-input">Search Customer:</label>
-            <input type="text" id="customer-search-input" placeholder="Search by name or phone..." value="{% if customer %}{{ customer.name }} - {{ customer.phone }}{% endif %}">
-            <div id="customer-search-results" class="custom-search-results"></div>
+            <label for="search_name">Search customer:</label>
+            <input type="text" id="search_name" name="search_name" value="{{ search_name }}" placeholder="Search by name or phone...">
+            <div id="customer-name-suggestions" class="custom-search-results"></div>
         </div>
+        <div class="filter-group">
+            <label for="search_gender">Gender:</label>
+            <select id="search_gender" name="search_gender">
+                <option value="">All</option>
+                {% for value, label in gender_choices %}
+                    <option value="{{ value }}" {% if search_gender == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="search_address">Address:</label>
+            <input type="text" id="search_address" name="search_address" value="{{ search_address }}" placeholder="Search by address...">
+        </div>
+        <button type="submit">Search</button>
     </form>
+
+    <div id="customer-search-results" class="custom-search-results">
+        {% for cust in customers %}
+            <div data-customer-id="{{ cust.id }}">{{ cust.name }} - {{ cust.phone }}</div>
+        {% empty %}
+            {% if search_name or search_gender or search_address %}
+                <p>No customers found for your search criteria.</p>
+            {% else %}
+                <p class="centered-message">Start typing in the search fields to find customers.</p>
+            {% endif %}
+        {% endfor %}
+    </div>
+
     <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}">
-    {% if customer %}
-    <div id="customer-details-section">
+    
+    <div id="customer-details-section" {% if not customer %}style="display:none;"{% endif %}>
         <form method="post" id="customer-detail-form">
             {% csrf_token %}
             <input type="hidden" name="customer_id" value="{{ customer.id }}">
@@ -20,75 +47,65 @@
             <button type="submit">Save Changes</button>
         </form>
     </div>
-    {% endif %}
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const customerSearchInput = document.getElementById('customer-search-input');
-            const customerSearchResults = document.getElementById('customer-search-results');
-            const selectedCustomerId = document.getElementById('selected-customer-id');
-            const customerDetailsSection = document.getElementById('customer-details-section');
-            const customerDetailForm = document.getElementById('customer-detail-form');
+{% endblock %}
 
-            // Function to load customer details into the form
-            function loadCustomerDetails(customerId) {
-                if (customerId) {
-                    window.location.href = `{% url 'customer_search_detail' %}?customer_id=${customerId}`;
-                } else {
-                    // Clear the form and hide details section if no customer is selected
-                    customerDetailForm.reset();
-                    customerDetailForm.querySelector('input[name="customer_id"]').value = '';
-                    customerDetailsSection.style.display = 'none';
-                }
-            }
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchNameInput = document.getElementById('search_name');
+    const customerNameSuggestions = document.getElementById('customer-name-suggestions');
+    const customerSearchResults = document.getElementById('customer-search-results');
+    const customerDetailsSection = document.getElementById('customer-details-section');
 
-            // Initial display of details if a customer is already selected (e.g., after a save)
-            if (selectedCustomerId.value) {
-                customerDetailsSection.style.display = 'block';
-            }
+    // Function to load customer details into the form
+    function loadCustomerDetails(customerId) {
+        if (customerId) {
+            window.location.href = `{% url 'customer_search_detail' %}?customer_id=${customerId}`;
+        } else {
+            // Clear the form and hide details section if no customer is selected
+            customerDetailsSection.style.display = 'none';
+        }
+    }
 
-            customerSearchInput.addEventListener('keyup', function() {
-                const query = customerSearchInput.value;
-                if (query.length > 2) {
-                    fetch(`/api/customer-search/?query=${query}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            customerSearchResults.innerHTML = '';
-                            data.forEach(customer => {
-                                const customerDiv = document.createElement('div');
-                                customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
-                                customerDiv.style.cursor = 'pointer';
-                                customerDiv.addEventListener('click', function() {
-                                    customerSearchInput.value = `${customer.name} - ${customer.phone}`;
-                                    customerSearchResults.innerHTML = '';
-                                    loadCustomerDetails(customer.id);
-                                });
-                                customerSearchResults.appendChild(customerDiv);
-                            });
-                        });
-                } else {
-                    customerSearchResults.innerHTML = '';
-                    // If search input is cleared, also clear the selected customer and form
-                    if (selectedCustomerId.value) {
-                        loadCustomerDetails(null);
-                    }
-                }
-            });
-
-            // Hide details section and clear form when search input is focused and a customer is selected
-            customerSearchInput.addEventListener('focus', function() {
-                if (selectedCustomerId.value) {
-                    customerDetailsSection.style.display = 'none';
-                    customerDetailForm.reset();
-                    selectedCustomerId.value = '';
-                    customerDetailForm.querySelector('input[name="customer_id"]').value = '';
-                }
-            });
-
-            const successMessage = "{{ success_message|escapejs }}";
-            if (successMessage && successMessage !== 'None') {
-                alert(successMessage);
-            }
+    // Handle click on search results (from initial search or suggestions)
+    customerSearchResults.querySelectorAll('div[data-customer-id]').forEach(div => {
+        div.addEventListener('click', function() {
+            const customerId = this.dataset.customerId;
+            loadCustomerDetails(customerId);
         });
-    </script>
+    });
+
+    // Autocomplete for customer name search
+    searchNameInput.addEventListener('keyup', function() {
+        const query = searchNameInput.value;
+        if (query.length > 2) {
+            fetch(`/api/customer-search/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    customerNameSuggestions.innerHTML = '';
+                    data.forEach(customer => {
+                        const suggestionDiv = document.createElement('div');
+                        suggestionDiv.innerHTML = `${customer.name} - ${customer.phone}`;
+                        suggestionDiv.style.cursor = 'pointer';
+                        suggestionDiv.addEventListener('click', function() {
+                            searchNameInput.value = customer.name; // Set name in input
+                            customerNameSuggestions.innerHTML = ''; // Clear suggestions
+                            // Optionally, trigger a search or load details directly
+                            // For now, just set the name and let the user click search or refine
+                        });
+                        customerNameSuggestions.appendChild(suggestionDiv);
+                    });
+                });
+        } else {
+            customerNameSuggestions.innerHTML = '';
+        }
+    });
+
+    const successMessage = "{{ success_message|escapejs }}";
+    if (successMessage && successMessage !== 'None') {
+        alert(successMessage);
+    }
+});
+</script>
 {% endblock %}

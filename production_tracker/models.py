@@ -2,11 +2,17 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 class Customer(models.Model):
+    GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other'),
+    ]
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.BigIntegerField(null=True, blank=True, unique=True)
     address = models.TextField(blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name

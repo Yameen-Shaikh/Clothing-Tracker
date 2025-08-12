@@ -6,7 +6,7 @@ from .models import (
 class OrderStageInline(admin.TabularInline):
     model = OrderStage
     extra = 1
-    fields = ('stage', 'assigned_vendor', 'start_date', 'end_date', 'status', 'note')
+    fields = ('stage', 'assigned_vendor', 'start_date', 'end_date', 'status', 'remark', 'note')
 
 class ParticularsInline(admin.TabularInline):
     model = Particulars
@@ -25,9 +25,13 @@ class CustomerAdmin(admin.ModelAdmin):
 class VendorAdmin(admin.ModelAdmin):
     list_display = ('name', 'role', 'note')
 
+@admin.register(OrderStage)
+class OrderStageAdmin(admin.ModelAdmin):
+    list_display = ('order', 'stage', 'assigned_vendor', 'status', 'remark', 'note')
+    fields = ('order', 'stage', 'assigned_vendor', 'start_date', 'end_date', 'status', 'remark', 'note')
+
 admin.site.register(Measurement)
 
 admin.site.register(PipelineStage)
-admin.site.register(OrderStage)
 admin.site.register(Invoice)
 admin.site.register(Particulars)

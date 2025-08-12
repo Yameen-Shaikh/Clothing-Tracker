@@ -73,7 +73,8 @@ class OrderForm(forms.ModelForm):
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:
         model = OrderStage
-        fields = ['stage', 'assigned_vendor', 'start_date', 'note']
+        fields = ['stage', 'assigned_vendor', 'start_date', 'end_date', 'remark']
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date'})
+            'start_date': forms.DateInput(attrs={'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'type': 'date'})
         }

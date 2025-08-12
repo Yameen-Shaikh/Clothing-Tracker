@@ -18,6 +18,7 @@
                 <th>Stage</th>
                 <th>Assigned Vendor</th>
                 <th>Status</th>
+                <th>Note</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -27,20 +28,21 @@
                     <td>{{ stage.stage.name }}</td>
                     <td>{{ stage.assigned_vendor.name|default:"N/A" }}</td>
                     <td>{{ stage.status }}</td>
+                    <td>{{ stage.note|default:"N/A" }}</td>
                     <td>
-                        <form action="{% url 'update_order_stage' stage.pk %}" method="post" style="display:inline;">
+                        <form action="{% url 'update_order_stage' stage.pk %}" method="post" style="display:inline;" class="update-form">
                             {% csrf_token %}
-                            <select name="status">
+                            <select name="status" class="status-select">
                                 {% for value, label in stage.STATUS_CHOICES %}
                                     <option value="{{ value }}" {% if stage.status == value %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
-                            <select name="assigned_vendor">
+                            <select name="assigned_vendor" class="vendor-select">
                                 {% for vendor in vendors %}
                                     <option value="{{ vendor.pk }}" {% if stage.assigned_vendor.pk == vendor.pk %}selected{% endif %}>{{ vendor.name }}</option>
                                 {% endfor %}
                             </select><br>
-                            <input type="hidden" name="remark" value="{{ stage.remark|default:"" }}">
+                            <input type="hidden" name="note" class="note-input" value="{{ stage.note|default:"" }}">
                             <button type="submit">Update</button>
                         </form>
                     </td>
@@ -50,4 +52,21 @@
     </table>
 
     <a href="{% url 'order_detail' order.pk %}" class="button">Back to Order Detail</a>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.status-select, .vendor-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const noteInput = this.closest('.update-form').querySelector('.note-input');
+            const newNote = prompt("Add a note:", noteInput.value);
+            if (newNote !== null) {
+                noteInput.value = newNote;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

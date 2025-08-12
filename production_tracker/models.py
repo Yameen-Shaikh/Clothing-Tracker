@@ -116,7 +116,8 @@ class OrderStage(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
-    note = models.TextField(blank=True)
+    remark = models.TextField(blank=True)
+    note = models.TextField(blank=True, help_text="Any additional notes for this stage.")
 
 class Invoice(models.Model):
     id = models.AutoField(primary_key=True)

@@ -12,7 +12,7 @@ class OrderStatusUpdateForm(forms.ModelForm):
 class OrderStageUpdateForm(forms.ModelForm):
     class Meta:
         model = OrderStage
-        fields = ['status', 'assigned_vendor']
+        fields = ['status', 'assigned_vendor', 'note']
         widgets = {
             'status': forms.Select(choices=OrderStage.STATUS_CHOICES),
         }
@@ -53,7 +53,7 @@ class MeasurementForm(forms.ModelForm):
 class VendorForm(forms.ModelForm):
     class Meta:
         model = Vendor
-        fields = ['name', 'role', 'phone_numbers', 'address', 'remark']
+        fields = ['name', 'role', 'phone_numbers', 'address', 'note']
 
 class PipelineStageForm(forms.ModelForm):
     class Meta:
@@ -73,7 +73,7 @@ class OrderForm(forms.ModelForm):
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:
         model = OrderStage
-        fields = ['stage', 'assigned_vendor', 'start_date', 'remark']
+        fields = ['stage', 'assigned_vendor', 'start_date', 'note']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'})
         }

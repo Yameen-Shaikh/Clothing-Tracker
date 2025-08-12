@@ -96,8 +96,8 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "defaultdb",
         "USER": "avnadmin",
-        "PASSWORD": "AVNS_-_52c1HGv6eD9lcTeYK",
-        "HOST": "pg-36b216a8-clothing-tracker.d.aivencloud.com",
+        "PASSWORD": "AVNS_4GQGnSLhDacpvNcOelB",
+        "HOST": "pg-123f2783-clothing-tracker.c.aivencloud.com",
         "PORT": "10779",
     }
 }

@@ -18,7 +18,6 @@
                 <th>Stage</th>
                 <th>Assigned Vendor</th>
                 <th>Status</th>
-                <th>Remark</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -27,7 +26,7 @@
                 <tr>
                     <td>{{ stage.stage.name }}</td>
                     <td>{{ stage.assigned_vendor.name|default:"N/A" }}</td>
-                    <td>{{ stage.remark|default:"N/A" }}</td>
+                    <td>{{ stage.status }}</td>
                     <td>
                         <form action="{% url 'update_order_stage' stage.pk %}" method="post" style="display:inline;">
                             {% csrf_token %}
@@ -40,7 +39,8 @@
                                 {% for vendor in vendors %}
                                     <option value="{{ vendor.pk }}" {% if stage.assigned_vendor.pk == vendor.pk %}selected{% endif %}>{{ vendor.name }}</option>
                                 {% endfor %}
-                            </select>
+                            </select><br>
+                            <input type="hidden" name="remark" value="{{ stage.remark|default:"" }}">
                             <button type="submit">Update</button>
                         </form>
                     </td>

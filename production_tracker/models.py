@@ -76,7 +76,7 @@ class Vendor(models.Model):
     role = models.ForeignKey(PipelineStage, on_delete=models.CASCADE)
     phone_numbers = ArrayField(models.BigIntegerField(), blank=True, null=True, default=list, help_text="List of contact phone numbers for the vendor.")
     address = models.TextField(blank=True)
-    remark = models.TextField(blank=True, help_text="Any additional remarks about the vendor.")
+    note = models.TextField(blank=True, help_text="Any additional notes about the vendor.")
 
     def __str__(self):
         return self.name
@@ -116,7 +116,7 @@ class OrderStage(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
-    remark = models.TextField(blank=True)
+    note = models.TextField(blank=True)
 
 class Invoice(models.Model):
     id = models.AutoField(primary_key=True)

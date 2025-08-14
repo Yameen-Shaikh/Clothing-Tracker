@@ -29,8 +29,8 @@
                     <td>{{ measurement.customer.name }}</td>
                     <td>{{ measurement.measurement_type }}</td>
                     <td>
-                        <a href="{% url 'measurement_detail' measurement.pk %}?view=true" class="button">View</a>
-                        <a href="{% url 'measurement_detail' measurement.pk %}" class="button">Edit</a>
+                        <a href="{% url 'measurement_detail' measurement.pk %}" class="button">View</a>
+                        <a href="{% url 'measurement_edit' measurement.pk %}" class="button">Edit</a>
                     </td>
                 </tr>
             {% empty %}

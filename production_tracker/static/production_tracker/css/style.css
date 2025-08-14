@@ -221,6 +221,15 @@ form textarea {
   color: var(--text-dark);
 }
 
+/* Specific adjustment for search_name input in customer_search_detail */
+#search_name {
+  width: 250px; /* Adjust as needed */
+}
+
+.filter-group #search_name {
+  width: 250px; /* Ensure it applies within the filter group */
+}
+
 form input[type="text"]:focus,
 form input[type="email"]:focus,
 form input[type="number"]:focus,

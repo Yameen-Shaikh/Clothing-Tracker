@@ -1,49 +1,41 @@
 {% extends 'production_tracker/base.html' %}
 
 {% block content %}
-    <h1>{{ title }}</h1>
-
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <h1>{{ title|default:"Create Measurement" }}</h1>
 
     <form method="post">
         {% csrf_token %}
         <p>
             <label for="customer-search-input">Customer:</label>
             {% if read_only %}
-                <input type="text" value="{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}" readonly>
+                <input type="text" value="{% if form.instance.customer %}{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}{% endif %}" readonly class="form-control">
             {% else %}
-                <input type="text" id="customer-search-input" placeholder="Search for a customer by name or phone..." value="{% if form.instance.customer %}{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}{% endif %}">
+                <input type="text" id="customer-search-input" placeholder="Search for a customer by name or phone..." value="{% if form.instance.customer %}{{ form.instance.customer.name }} - {{ form.instance.customer.phone }}{% endif %}" class="form-control">
                 <div id="customer-search-results"></div>
             {% endif %}
         </p>
         <input type="hidden" name="customer" id="selected-customer-id" value="{% if form.instance.customer %}{{ form.instance.customer.id }}{% endif %}">
 
-        <p>
+        <div class="form-group">
             {{ form.measurement_type.label_tag }}
             {{ form.measurement_type }}
-        </p>
+        </div>
 
         {% for field in form %}
             {% if field.name != 'customer' and field.name != 'measurement_type' %}
-                <p>
+                <div class="form-group">
                     {{ field.label_tag }}
                     {{ field }}
-                    {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+                    {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
                     {% if field.errors %}
-                        <ul class="errorlist">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                        <div class="alert alert-danger">{{ field.errors }}</div>
                     {% endif %}
-                </p>
+                </div>
             {% endif %}
         {% endfor %}
 
         {% if not read_only %}
-            <button type="submit">Save Measurement</button>
+            <button type="submit" class="btn btn-primary">Save Measurement</button>
         {% endif %}
     </form>
 
@@ -64,6 +56,7 @@
                                 const customerDiv = document.createElement('div');
                                 customerDiv.innerHTML = `${customer.name} - ${customer.phone}`;
                                 customerDiv.style.cursor = 'pointer';
+                                customerDiv.classList.add('customer-search-item');
                                 customerDiv.addEventListener('click', function() {
                                     selectedCustomerId.value = customer.id;
                                     customerSearchInput.value = `${customer.name} - ${customer.phone}`;

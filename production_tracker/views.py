@@ -2,11 +2,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.views import View
 from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from .models import Order, OrderStage, Customer, Measurement, Vendor, PipelineStage, Invoice
 from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from datetime import date
+from django.contrib.auth.views import LoginView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.models import Sum, Count, Q
+from django.http import JsonResponse
 
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -91,12 +95,6 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
                 'search_address': search_address,
                 'gender_choices': Customer.GENDER_CHOICES,
             })
-from datetime import date
-from django.contrib.auth.views import LoginView
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Sum, Count, Q
-from django.http import JsonResponse
 
 class CustomerSearchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -126,8 +124,6 @@ class MeasurementSearchView(LoginRequiredMixin, View):
         results = [{'id': m.id, 'customer_name': m.customer.name, 'type': m.measurement_type} for m in measurements]
         return JsonResponse(results, safe=False)
 
-
-
 class CustomLoginView(LoginView):
     template_name = 'production_tracker/login.html'
     fields = '__all__'
@@ -151,10 +147,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Order Analytics
-        context['total_orders'] = Order.objects.count()
-        context['pending_orders'] = Order.objects.filter(status='Pending').count()
-        context['in_progress_orders'] = Order.objects.filter(status='In-Progress').count()
-        context['completed_orders'] = Order.objects.filter(status='Completed').count()
+        pending_orders = Order.objects.filter(status='Pending').count()
+        in_progress_orders = Order.objects.filter(status='In-Progress').count()
+        completed_orders = Order.objects.filter(status='Completed').count()
+        
+        context['total_orders'] = pending_orders + in_progress_orders + completed_orders
+        context['pending_orders'] = pending_orders
+        context['in_progress_orders'] = in_progress_orders
+        context['completed_orders'] = completed_orders
         context['recent_orders'] = Order.objects.order_by('-order_placed_on')[:5]
 
         # Vendor Analytics
@@ -164,12 +164,26 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['total_customers'] = Customer.objects.count()
 
         # Invoice Analytics
-        context['total_invoice_amount'] = Invoice.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-        context['paid_invoices'] = Invoice.objects.filter(paid=True).count()
-        context['unpaid_invoices'] = Invoice.objects.filter(paid=False).count()
+        total_invoice_amount = Invoice.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+        paid_invoices = Invoice.objects.filter(paid=True).count()
+        unpaid_invoices = Invoice.objects.filter(paid=False).count()
+
+        context['total_invoice_amount'] = total_invoice_amount / 100
+        context['paid_invoices'] = paid_invoices
+        context['unpaid_invoices'] = unpaid_invoices
 
         # Order Stage Analytics
         context['stages_in_progress'] = OrderStage.objects.filter(status='In-Progress').count()
+
+        # Chart data
+        context['order_status_data'] = {
+            'labels': ['Pending', 'In Progress', 'Completed'],
+            'data': [pending_orders, in_progress_orders, completed_orders],
+        }
+        context['invoice_status_data'] = {
+            'labels': ['Paid', 'Unpaid'],
+            'data': [paid_invoices, unpaid_invoices],
+        }
 
         return context
 
@@ -179,7 +193,7 @@ class OrderListView(LoginRequiredMixin, ListView):
     context_object_name = 'orders'
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('measurement', 'customer')
+        queryset = super().get_queryset().select_related('customer')
         status = self.request.GET.get('status')
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
@@ -296,11 +310,6 @@ class UpdateOrderStatusView(LoginRequiredMixin, View):
         if form.is_valid():
             form.save()
         return redirect('order_detail', pk=order.pk)
-
-
-class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_superuser
 
 class CustomerListView(SuperuserRequiredMixin, ListView):
     model = Customer
@@ -435,42 +444,56 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
         context['success_message'] = self.request.session.pop('success_message', None)
         return context
 
-class MeasurementDetailView(LoginRequiredMixin, View):
-    template_name = 'production_tracker/measurement_form.html'
+class MeasurementCreateView(LoginRequiredMixin, CreateView):
+    model = Measurement
     form_class = MeasurementForm
-    success_url = reverse_lazy('measurement_list')
+    template_name = 'production_tracker/measurement_form.html'
+    
+    def get_success_url(self):
+        return reverse('measurement_new')
 
-    def get(self, request, pk=None, *args, **kwargs):
-        read_only = request.GET.get('view', 'false').lower() == 'true'
-        if pk:
-            measurement = get_object_or_404(Measurement, pk=pk)
-            form = self.form_class(instance=measurement, read_only=read_only)
-            title = "View Measurement" if read_only else "Edit Measurement"
-        else:
-            form = self.form_class()
-            title = "Create New Measurement"
-        return render(request, self.template_name, {'form': form, 'title': title, '_read_only': read_only})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Create New Measurement"
+        return context
 
-    def post(self, request, pk=None, *args, **kwargs):
-        if pk:
-            measurement = get_object_or_404(Measurement, pk=pk)
-            form = self.form_class(request.POST, instance=measurement)
-        else:
-            form = self.form_class(request.POST)
+    def form_valid(self, form):
+        customer_id = self.request.POST.get('customer')
+        if not customer_id:
+            form.add_error('customer', 'Please select a customer.')
+            return self.form_invalid(form)
 
-        if form.is_valid():
-            customer_id = request.POST.get('customer')
-            if not customer_id:
-                form.add_error('customer', 'Please select a customer.')
-                title = "Create New Measurement" if not pk else "Edit Measurement"
-                return render(request, self.template_name, {'form': form, 'title': title})
+        customer = get_object_or_404(Customer, pk=customer_id)
+        measurement = form.save(commit=False)
+        measurement.customer = customer
+        measurement.save()
+        messages.success(self.request, f'Measurement for {customer.name} saved successfully.')
+        return redirect(self.get_success_url())
 
-            customer = get_object_or_404(Customer, pk=customer_id)
-            measurement = form.save(commit=False)
-            measurement.customer = customer
-            measurement.save()
-            messages.success(request, f'Measurement for {customer.name} saved successfully.')
-            return redirect(self.success_url)
-        else:
-            title = "Create New Measurement" if not pk else "Edit Measurement"
-            return render(request, self.template_name, {'form': form, 'title': title})
+class MeasurementUpdateView(LoginRequiredMixin, UpdateView):
+    model = Measurement
+    form_class = MeasurementForm
+    template_name = 'production_tracker/measurement_form.html'
+    
+    def get_success_url(self):
+        return reverse('measurement_edit', kwargs={'pk': self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Edit Measurement"
+        return context
+
+class MeasurementDetailView(LoginRequiredMixin, DetailView):
+    model = Measurement
+    template_name = 'production_tracker/measurement_form.html'
+    context_object_name = 'measurement'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "View Measurement"
+        context['read_only'] = True
+        form = MeasurementForm(instance=self.object)
+        for field in form.fields:
+            form.fields[field].widget.attrs['disabled'] = True
+        context['form'] = form
+        return context

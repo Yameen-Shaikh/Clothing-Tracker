@@ -1,181 +1,190 @@
 {% extends 'production_tracker/base.html' %}
 
 {% block content %}
-    <h1>Dashboard</h1>
-    <p>Welcome to your Clothing Production Tracker dashboard!</p>
-    
-    <div class="dashboard-section">
-        <h2>Order Overview</h2>
-        <div class="analytics-cards">
-            <div class="card">
-                <h3>Total Orders</h3>
-                <p>{{ total_orders }}</p>
-            </div>
-            <div class="card">
-                <h3>Pending Orders</h3>
-                <p>{{ pending_orders }}</p>
-            </div>
-            <div class="card">
-                <h3>In Progress Orders</h3>
-                <p>{{ in_progress_orders }}</p>
-            </div>
-            <div class="card">
-                <h3>Completed Orders</h3>
-                <p>{{ completed_orders }}</p>
-            </div>
-        </div>
+<h1>Dashboard</h1>
+<p>Welcome to your Clothing Production Tracker dashboard!</p>
 
-        <div class="chart-container">
-            <canvas id="orderStatusChart"></canvas>
-        </div>
-
-        <h2>Recent Orders</h2>
-        {% if recent_orders %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order Number</th>
-                        <th>Customer</th>
-                        <th>Order Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in recent_orders %}
-                        <tr>
-                            <td><a href="{% url 'order_detail' order.pk %}">{{ order.order_number }}</a></td>
-                            <td>{{ order.customer.name }}</td>
-                            <td>{{ order.order_date }}</td>
-                            <td>{{ order.status }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No recent orders to display.</p>
-        {% endif %}
+<div class="dashboard-section">
+  <h2>Order Overview</h2>
+  <div class="analytics-cards">
+    <div class="card">
+      <h3>Total Orders</h3>
+      <p>{{ total_orders }}</p>
     </div>
-
-    <div class="dashboard-section">
-        <h2>Vendor & Customer Overview</h2>
-        <div class="analytics-cards">
-            <div class="card">
-                <h3>Total Vendors</h3>
-                <p>{{ total_vendors }}</p>
-            </div>
-            <div class="card">
-                <h3>Total Customers</h3>
-                <p>{{ total_customers }}</p>
-            </div>
-        </div>
+    <div class="card">
+      <h3>Pending Orders</h3>
+      <p>{{ pending_orders }}</p>
     </div>
-
-    <div class="dashboard-section">
-        <h2>Invoice Overview</h2>
-        <div class="analytics-cards">
-            <div class="card">
-                <h3>Total Invoiced Amount</h3>
-                <p>${{ total_invoice_amount|floatformat:2 }}</p>
-            </div>
-            <div class="card">
-                <h3>Paid Invoices</h3>
-                <p>{{ paid_invoices }}</p>
-            </div>
-            <div class="card">
-                <h3>Unpaid Invoices</h3>
-                <p>{{ unpaid_invoices }}</p>
-            </div>
-        </div>
-        <div class="chart-container">
-            <canvas id="invoiceStatusChart"></canvas>
-        </div>
+    <div class="card">
+      <h3>In Progress Orders</h3>
+      <p>{{ in_progress_orders }}</p>
     </div>
-
-    <div class="dashboard-section">
-        <h2>Production Stages</h2>
-        <div class="analytics-cards">
-            <div class="card">
-                <h3>Stages In Progress</h3>
-                <p>{{ stages_in_progress }}</p>
-            </div>
-        </div>
+    <div class="card">
+      <h3>Completed Orders</h3>
+      <p>{{ completed_orders }}</p>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        // Data from Django context
-        const pendingOrders = {{ pending_orders }};
-        const inProgressOrders = {{ in_progress_orders }};
-        const completedOrders = {{ completed_orders }};
+  <div class="chart-container">
+    <canvas id="orderStatusChart"></canvas>
+  </div>
 
-        const paidInvoices = {{ paid_invoices }};
-        const unpaidInvoices = {{ unpaid_invoices }};
+  <h2>Recent Orders</h2>
+  {% if recent_orders %}
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Order Placed On</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in recent_orders %}
+      <tr>
+        <td><a href="{% url 'order_detail' order.pk %}">{{ order.id }}</a></td>
+        <td>{{ order.customer.name }}</td>
+        <td>{{ order.order_placed_on }}</td>
+        <td>{{ order.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No recent orders to display.</p>
+  {% endif %}
+</div>
 
-        // Order Status Chart
-        const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-        new Chart(orderStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Pending', 'In Progress', 'Completed'],
-                datasets: [{
-                    data: [pendingOrders, inProgressOrders, completedOrders],
-                    backgroundColor: [
-                        '#cb4b16', // Terracotta
-                        '#4682B4', // Steel Blue
-                        '#B8860B'  // Dark Gold
-                    ],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Order Status Distribution',
-                        color: '#36454F' // text-dark
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#36454F' // text-dark
-                        }
-                    }
-                }
-            }
-        });
+<div class="dashboard-section">
+  <h2>Vendor & Customer Overview</h2>
+  <div class="analytics-cards">
+    <div class="card">
+      <h3>Total Vendors</h3>
+      <p>{{ total_vendors }}</p>
+    </div>
+    <div class="card">
+      <h3>Total Customers</h3>
+      <p>{{ total_customers }}</p>
+    </div>
+  </div>
+</div>
 
-        // Invoice Status Chart
-        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
-        new Chart(invoiceStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Paid', 'Unpaid'],
-                datasets: [{
-                    data: [paidInvoices, unpaidInvoices],
-                    backgroundColor: [
-                        '#B8860B', // Dark Gold
-                        '#8B0000'  // Rich Red
-                    ],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Invoice Status Distribution',
-                        color: '#36454F' // text-dark
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#36454F' // text-dark
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+<div class="dashboard-section">
+  <h2>Invoice Overview</h2>
+  <div class="analytics-cards">
+    <div class="card">
+      <h3>Total Invoiced Amount</h3>
+      <p>${{ total_invoice_amount|floatformat:2 }}</p>
+    </div>
+    <div class="card">
+      <h3>Paid Invoices</h3>
+      <p>{{ paid_invoices }}</p>
+    </div>
+    <div class="card">
+      <h3>Unpaid Invoices</h3>
+      <p>{{ unpaid_invoices }}</p>
+    </div>
+  </div>
+  <div class="chart-container">
+    <canvas id="invoiceStatusChart"></canvas>
+  </div>
+</div>
+
+<div class="dashboard-section">
+  <h2>Production Stages</h2>
+  <div class="analytics-cards">
+    <div class="card">
+      <h3>Stages In Progress</h3>
+      <p>{{ stages_in_progress }}</p>
+    </div>
+  </div>
+</div>
+
+{{ order_status_data|json_script:"order-status-data" }}
+{{ invoice_status_data|json_script:"invoice-status-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const orderStatusData = JSON.parse(
+    document.getElementById("order-status-data").textContent
+  );
+  const invoiceStatusData = JSON.parse(
+    document.getElementById("invoice-status-data").textContent
+  );
+
+  // Order Status Chart
+  const orderStatusCtx = document
+    .getElementById("orderStatusChart")
+    .getContext("2d");
+  new Chart(orderStatusCtx, {
+    type: "doughnut",
+    data: {
+      labels: orderStatusData.labels,
+      datasets: [
+        {
+          data: orderStatusData.data,
+          backgroundColor: [
+            "#cb4b16", // Terracotta
+            "#4682B4", // Steel Blue
+            "#B8860B", // Dark Gold
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Order Status Distribution",
+          color: "#36454F", // text-dark
+        },
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "#36454F", // text-dark
+          },
+        },
+      },
+    },
+  });
+
+  // Invoice Status Chart
+  const invoiceStatusCtx = document
+    .getElementById("invoiceStatusChart")
+    .getContext("2d");
+  new Chart(invoiceStatusCtx, {
+    type: "doughnut",
+    data: {
+      labels: invoiceStatusData.labels,
+      datasets: [
+        {
+          data: invoiceStatusData.data,
+          backgroundColor: [
+            "#B8860B", // Dark Gold
+            "#8B0000", // Rich Red
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Invoice Status Distribution",
+          color: "#36454F", // text-dark
+        },
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "#36454F", // text-dark
+          },
+        },
+      },
+    },
+  });
+</script>
 {% endblock %}

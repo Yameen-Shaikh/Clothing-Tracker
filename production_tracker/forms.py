@@ -46,6 +46,14 @@ class CustomerForm(forms.ModelForm):
         return phone
 
 class MeasurementForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.read_only = kwargs.pop('read_only', False)
+        super().__init__(*args, **kwargs)
+        if self.read_only:
+            for field_name, field in self.fields.items():
+                field.widget.attrs['readonly'] = 'readonly'
+                field.widget.attrs['disabled'] = 'disabled'
+
     class Meta:
         model = Measurement
         fields = ['measurement_type', 'height', 'weight', 'chest', 'waist', 'hips', 'neck', 'sleeve_length', 'bicep', 'wrist', 'shoulder_width', 'shirt_length', 'inseam', 'outseam', 'thigh', 'knee', 'ankle', 'pant_length', 'jacket_length', 'dress_length']

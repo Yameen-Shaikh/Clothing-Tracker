@@ -3,7 +3,7 @@ from .views import (
     DashboardView,
     OrderListView, OrderDetailView, UpdateOrderStageView, OrderCreateView, UpdateOrderStatusView, OrderStageManageView,
     CustomerListView, CustomerCreateView, CustomerSearchView, CustomerDetailUpdateView,
-    MeasurementListView, MeasurementDetailView, MeasurementSearchView,
+    MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView,
     VendorListView, VendorCreateView, VendorUpdateView,
     PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView,
     CustomLoginView
@@ -27,9 +27,10 @@ urlpatterns = [
     path('api/measurement-search/', MeasurementSearchView.as_view(), name='measurement_search'),
     
     path('measurements/', MeasurementListView.as_view(), name='measurement_list'),
-    path('measurements/create/', MeasurementDetailView.as_view(), name='measurement_create'),
+    path('measurements/new/', MeasurementCreateView.as_view(), name='measurement_new'),
+    path('measurements/<int:pk>/edit/', MeasurementUpdateView.as_view(), name='measurement_edit'),
     path('measurements/<int:pk>/', MeasurementDetailView.as_view(), name='measurement_detail'),
-    
+
     path('vendors/', VendorListView.as_view(), name='vendor_list'),
     path('vendors/create/', VendorCreateView.as_view(), name='vendor_create'),
     path('vendors/<int:pk>/update/', VendorUpdateView.as_view(), name='vendor_update'),

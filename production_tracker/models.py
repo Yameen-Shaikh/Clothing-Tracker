@@ -113,7 +113,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
     specifications = models.TextField(blank=True)
     completion_date = models.DateField(null=True, blank=True, help_text="Date when the order was completed.")
-    amount = models.IntegerField(default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
+    amount = models.IntegerField(default=0)
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     measurement = models.ForeignKey(Measurement, on_delete=models.SET_NULL, null=True, blank=True)
 

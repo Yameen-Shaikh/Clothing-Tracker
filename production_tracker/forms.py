@@ -27,6 +27,12 @@ class OrderForm(forms.ModelForm):
             'specifications': forms.Textarea(attrs={'rows': 3}),
         }
 
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount is not None:
+            return int(amount * 100) # Convert to paise
+        return amount
+
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
@@ -75,6 +81,24 @@ class InvoiceForm(forms.ModelForm):
         widgets = {
             'paid_on_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk: # If editing an existing invoice
+            self.fields['total_amount'].initial = self.instance.total_amount / 100
+            self.fields['paid_amount'].initial = self.instance.paid_amount / 100
+
+    def clean_total_amount(self):
+        total_amount = self.cleaned_data.get('total_amount')
+        if total_amount is not None:
+            return int(total_amount * 100) # Convert to paise
+        return total_amount
+
+    def clean_paid_amount(self):
+        paid_amount = self.cleaned_data.get('paid_amount')
+        if paid_amount is not None:
+            return int(paid_amount * 100) # Convert to paise
+        return paid_amount
 
 
 class OrderStageCreateForm(forms.ModelForm):

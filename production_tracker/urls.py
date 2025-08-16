@@ -7,13 +7,13 @@ from .views import (
     MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView, OrderSearchView, VendorSearchView,
     VendorListView, VendorCreateView, VendorUpdateView,
     PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView, PickOrdersView, CreateInvoiceView, InvoiceUpdateView, AddOrdersToInvoiceView, RemoveOrderFromInvoiceView,
-    CustomLoginView
+    CustomLoginView,
+    CustomLogoutView
 )
-from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
+    path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     path('', DashboardView.as_view(), name='dashboard'),
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('orders/new/', OrderCreateView.as_view(), name='order_new'),

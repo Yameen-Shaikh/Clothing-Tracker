@@ -33,7 +33,12 @@
                 <div class="auth-links">
                     {% if user.is_authenticated %}
                         <p>Welcome, {{ user.username }}!</p>
-                        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="logout-button">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
                     {% else %}
                         <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
                     {% endif %}

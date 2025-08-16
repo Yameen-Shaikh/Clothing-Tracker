@@ -476,3 +476,30 @@ form textarea:focus {
   font-style: italic;
   color: var(--text-dark);
 }
+
+/* Styling for the Logout Button */
+.logout-button {
+  display: block;
+  text-align: center;
+  color: var(--gold); /* Gold for login/logout links */
+  text-decoration: none;
+  padding: 10px;
+  border: 1px solid var(--gold);
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* Reset default button styles */
+  background: none;
+  cursor: pointer;
+  width: 100%; /* Make it take full width like the original link */
+  font-size: 1em; /* Match font size of other links */
+  font-family: "Roboto", sans-serif; /* Match font family */
+}
+
+.logout-button:hover {
+  background-color: var(--gold);
+  color: var(--deep-blue);
+}
+
+.logout-button i {
+  margin-right: 10px; /* Add margin to icon */
+}

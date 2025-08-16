@@ -7,9 +7,9 @@ from .models import Order, OrderStage, Customer, Measurement, Vendor, PipelineSt
 from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm, InvoiceForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from datetime import date
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, F
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -191,6 +191,11 @@ class CustomLoginView(LoginView):
         self.request.session['refresh_token'] = str(refresh)
         return response
 
+class CustomLogoutView(LogoutView):
+    def dispatch(self, request, *args, **kwargs):
+        messages.success(request, "You have been logged out successfully.")
+        return super().dispatch(request, *args, **kwargs)
+
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'production_tracker/dashboard.html'
 
@@ -216,8 +221,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # Invoice Analytics
         total_invoice_amount = Invoice.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-        paid_invoices = Invoice.objects.filter(paid_amount__gt=0).count()
-        unpaid_invoices = Invoice.objects.filter(paid_amount=0).count()
+        paid_invoices = Invoice.objects.filter(paid_amount=F('total_amount')).count()
+        unpaid_invoices = Invoice.objects.filter(paid_amount__lt=F('total_amount')).count()
 
         context['total_invoice_amount'] = total_invoice_amount / 100
         context['paid_invoices'] = paid_invoices
@@ -471,6 +476,13 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['order_id'] = self.request.GET.get('order_id', '')
+        
+        # Add display amounts for invoices
+        for invoice in context['invoices']:
+            invoice.display_total_amount = invoice.total_amount / 100
+            invoice.display_paid_amount = invoice.paid_amount / 100
+            invoice.display_balance = invoice.balance / 100
+
         return context
 
 def get_vendors_by_stage(request, stage_id):
@@ -528,7 +540,7 @@ class CreateInvoiceView(LoginRequiredMixin, View):
         total_amount = orders.aggregate(Sum('amount'))['amount__sum'] or 0
         
         if 'create_invoice' in request.POST:
-            paid_amount = int(request.POST.get('paid_amount', 0))
+            paid_amount = int(request.POST.get('paid_amount', 0)) * 100
             invoice = Invoice.objects.create(
                 total_amount=total_amount,
                 paid_on_date=date.today(),

@@ -1,46 +1,50 @@
-{% extends 'production_tracker/base.html' %}
+{% extends 'production_tracker/base.html' %} {% block content %}
+<h1>Invoices</h1>
 
-{% block content %}
-    <h1>Invoices</h1>
+<form method="get" class="form-inline mb-3">
+  <div class="form-group mr-2">
+    <label for="order_id" class="sr-only">Search by Order ID</label>
+    <input
+      type="text"
+      class="form-control"
+      id="order_id"
+      name="order_id"
+      placeholder="Search by Order ID"
+      value="{{ request.GET.order_id|default:'' }}"
+    />
+  </div>
+  <button type="submit" class="button">Search</button>
+</form>
 
-    <form method="get" class="form-inline mb-3">
-        <div class="form-group mr-2">
-            <label for="order_id" class="sr-only">Search by Order ID</label>
-            <input type="text" class="form-control" id="order_id" name="order_id" placeholder="Search by Order ID" value="{{ request.GET.order_id|default:'' }}">
-        </div>
-        <button type="submit" class="button">Search</button>
-    </form>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Invoice ID</th>
-                <th>Total Amount</th>
-                <th>Paid on Date</th>
-                <th>Paid Amount</th>
-                <th>Balance</th>
-                <th>Orders</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for invoice in invoices %}
-                <tr>
-                    <td>{{ invoice.id }}</td>
-                    <td>₹{{ invoice.total_amount }}</td>
-                    <td>₹{{ invoice.paid_on_date }}</td>
-                    <td>₹{{ invoice.paid_amount }}</td>
-                    <td>₹{{ invoice.balance }}</td>
-                    <td>
-                        {% for order in invoice.orders.all %}
-                            <a href="{% url 'order_detail' order.id %}">{{ order.id }}</a>{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </td>
-                    <td>
-                        <a href="{% url 'invoice_edit' invoice.id %}" class="button">Edit</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Invoice ID</th>
+      <th>Total Amount</th>
+      <th>Paid on Date</th>
+      <th>Paid Amount</th>
+      <th>Balance</th>
+      <th>Orders</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for invoice in invoices %}
+    <tr>
+      <td>{{ invoice.id }}</td>
+      <td>₹{{ invoice.display_total_amount }}</td>
+      <td>{{ invoice.paid_on_date }}</td>
+      <td>₹{{ invoice.display_paid_amount }}</td>
+      <td>₹{{ invoice.display_balance }}</td>
+      <td>
+        {% for order in invoice.orders.all %}
+        <a href="{% url 'order_detail' order.id %}">{{ order.id }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+      </td>
+      <td>
+        <a href="{% url 'invoice_edit' invoice.id %}" class="button">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

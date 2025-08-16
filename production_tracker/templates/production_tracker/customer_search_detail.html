@@ -1,8 +1,6 @@
 {% extends 'production_tracker/base.html' %}
-
 {% block content %}
     <h1>Search and Edit Customer</h1>
-
     <form class="filter-form" method="get">
         <div class="filter-group">
             <label for="search_name">Search customer:</label>
@@ -25,19 +23,19 @@
         <button type="submit">Search</button>
     </form>
 
+    
+
     <div id="customer-search-results" class="custom-search-results">
         {% for cust in customers %}
             <div data-customer-id="{{ cust.id }}">{{ cust.name }} - {{ cust.phone }}</div>
         {% empty %}
             {% if search_name or search_gender or search_address %}
                 <p>No customers found for your search criteria.</p>
-            {% else %}
-                <p class="centered-message">Start typing in the search fields to find customers.</p>
             {% endif %}
         {% endfor %}
     </div>
 
-    <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}">
+    <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}>
     
     <div id="customer-details-section" {% if not customer %}style="display:none;"{% endif %}>
         <form method="post" id="customer-detail-form">
@@ -47,7 +45,6 @@
             <button type="submit">Save Changes</button>
         </form>
     </div>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -58,17 +55,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const customerSearchResults = document.getElementById('customer-search-results');
     const customerDetailsSection = document.getElementById('customer-details-section');
 
-    // Function to load customer details into the form
     function loadCustomerDetails(customerId) {
         if (customerId) {
             window.location.href = `{% url 'customer_search_detail' %}?customer_id=${customerId}`;
         } else {
-            // Clear the form and hide details section if no customer is selected
             customerDetailsSection.style.display = 'none';
         }
     }
 
-    // Handle click on search results (from initial search or suggestions)
     customerSearchResults.querySelectorAll('div[data-customer-id]').forEach(div => {
         div.addEventListener('click', function() {
             const customerId = this.dataset.customerId;
@@ -76,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Autocomplete for customer name search
     searchNameInput.addEventListener('keyup', function() {
         const query = searchNameInput.value;
         if (query.length > 2) {
@@ -89,10 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         suggestionDiv.innerHTML = `${customer.name} - ${customer.phone}`;
                         suggestionDiv.style.cursor = 'pointer';
                         suggestionDiv.addEventListener('click', function() {
-                            searchNameInput.value = customer.name; // Set name in input
-                            customerNameSuggestions.innerHTML = ''; // Clear suggestions
-                            // Optionally, trigger a search or load details directly
-                            // For now, just set the name and let the user click search or refine
+                            searchNameInput.value = customer.name;
+                            customerNameSuggestions.innerHTML = '';
                         });
                         customerNameSuggestions.appendChild(suggestionDiv);
                     });
@@ -100,6 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             customerNameSuggestions.innerHTML = '';
         }
+    });
+
+    // Clear suggestions when the form is submitted
+    document.querySelector('.filter-form').addEventListener('submit', function() {
+        customerNameSuggestions.innerHTML = '';
     });
 
     const successMessage = "{{ success_message|escapejs }}";

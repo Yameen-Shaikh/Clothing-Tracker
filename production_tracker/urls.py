@@ -3,9 +3,9 @@ from .views import (
     DashboardView,
     OrderListView, OrderDetailView, UpdateOrderStageView, OrderCreateView, UpdateOrderStatusView, OrderStageManageView,
     CustomerListView, CustomerCreateView, CustomerSearchView, CustomerDetailUpdateView,
-    MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView,
+    MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView, OrderSearchView,
     VendorListView, VendorCreateView, VendorUpdateView,
-    PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView,
+    PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView, PickOrdersView, CreateInvoiceView, InvoiceUpdateView, AddOrdersToInvoiceView, RemoveOrderFromInvoiceView,
     CustomLoginView
 )
 from django.contrib.auth.views import LogoutView
@@ -25,6 +25,7 @@ urlpatterns = [
     path('customers/search-detail/', CustomerDetailUpdateView.as_view(), name='customer_search_detail'),
     path('api/customer-search/', CustomerSearchView.as_view(), name='customer_search'),
     path('api/measurement-search/', MeasurementSearchView.as_view(), name='measurement_search'),
+    path('api/order-search/', OrderSearchView.as_view(), name='order_search'),
     
     path('measurements/', MeasurementListView.as_view(), name='measurement_list'),
     path('measurements/new/', MeasurementCreateView.as_view(), name='measurement_new'),
@@ -38,4 +39,9 @@ urlpatterns = [
     path('pipeline-stages/create/', PipelineStageCreateView.as_view(), name='pipelinestage_create'),
     path('pipeline-stages/<int:pk>/update/', PipelineStageUpdateView.as_view(), name='pipelinestage_update'),
     path('invoices/', InvoiceListView.as_view(), name='invoice_list'),
+    path('invoices/pick-orders/', PickOrdersView.as_view(), name='pick_orders'),
+    path('invoices/create/', CreateInvoiceView.as_view(), name='create_invoice'),
+    path('invoices/<int:pk>/edit/', InvoiceUpdateView.as_view(), name='invoice_edit'),
+    path('invoices/<int:pk>/add-orders/', AddOrdersToInvoiceView.as_view(), name='add_orders_to_invoice'),
+    path('invoices/<int:pk>/remove-order/', RemoveOrderFromInvoiceView.as_view(), name='remove_order_from_invoice'),
 ]

@@ -27,6 +27,7 @@
                         <li><a href="{% url 'measurement_list' %}"><i class="fas fa-ruler-combined"></i> Measurements</a></li>
                         <li><a href="{% url 'measurement_new' %}"><i class="fas fa-plus-square"></i> New Measurement</a></li>
                         <li><a href="{% url 'invoice_list' %}"><i class="fas fa-file-invoice-dollar"></i> Invoices</a></li>
+                        <li><a href="{% url 'pick_orders' %}"><i class="fas fa-plus-circle"></i> Create Invoice</a></li>
                     {% endif %}
                 </ul>
                 <div class="auth-links">
@@ -39,26 +40,20 @@
                 </div>
             </aside>
             <main class="col-md-10 ml-sm-auto col-lg-10 px-md-4 main-content">
-                {% if messages %}
-                    <div class="container mt-3">
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% block content %}
-                {% endblock %}
+                {% block content %}{% endblock %}
             </main>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    {% if messages %}
+        <script>
+            {% for message in messages %}
+                alert("{{ message }}");
+            {% endfor %}
+        </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

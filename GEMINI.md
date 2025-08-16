@@ -115,6 +115,8 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `/customers/search-detail/`: `CustomerDetailUpdateView` (Search and edit customer)
 - `/measurements/`: `MeasurementListView` (List all measurements)
 - `/measurements/new/`: `MeasurementCreateView` (Create new measurement, with customer search).
+- `/measurements/<int:pk>/`: `MeasurementDetailView` (View single measurement details).
+- `/measurements/<int:pk>/edit/`: `MeasurementUpdateView` (Edit single measurement details).
 - `/vendor-roles/`: `VendorRoleListView` (List all vendor roles)
 - `/vendors/`: `VendorListView` (List all vendors)
 - `/pipeline-stages/`: `PipelineStageListView` (List all pipeline stages)
@@ -134,11 +136,14 @@ All views are protected by `LoginRequiredMixin`.
 - **Measurements:**
     - `MeasurementListView` (`measurement_list.html`): Lists all measurements.
     - `MeasurementCreateView` (`measurement_form.html`): Form for creating new measurements with customer search.
+    - `MeasurementDetailView` (`measurement_form.html`): View for displaying a single measurement's details.
+    - `MeasurementUpdateView` (`measurement_form.html`): Form for updating an existing measurement.
 - **Other List Views:** `VendorRoleListView`, `VendorListView`, `PipelineStageListView`, `InvoiceListView` with corresponding templates.
 
 ## UI/UX Theme
 - **Theme:** Mughal cultural theme (reinstated).
 - **Layout:** Full width and height application layout.
+- **Framework:** Bootstrap is used for styling and layout.
 - **Color Scheme:** Deep blues, golds, rich reds, and creams.
 - **Typography:** `Roboto` for body text, `Playfair Display` for headings.
 - **Icons:** Font Awesome icons used in the sidebar menu.
@@ -153,12 +158,16 @@ All views are protected by `LoginRequiredMixin`.
 - Logout functionality is available.
 
 ## Recent Changes
-- **Customer Search and Edit:**
-    - Replaced on-page success messages with popup alerts for a cleaner user experience.
-    - Themed the customer search input to match the application's Mughal theme.
-    - Increased the width of the customer search input to ensure the placeholder text is fully visible.
-- **Error Fixes:**
-    - Resolved an error in the customer search/edit page that occurred when a customer was not selected.
+- **Dashboard:**
+    - Fixed JavaScript errors that were preventing the charts from rendering.
+    - Refactored the dashboard to use the `json_script` template tag for safely passing data to the frontend.
+    - Corrected the calculation of the total invoice amount.
+- **Measurements:**
+    - Fixed `NoReverseMatch` errors in the measurement list and pipeline stage list pages.
+    - Refactored the measurement views to have separate views for creating, updating, and viewing measurements.
+    - Updated the measurement form to use Bootstrap for styling.
+- **General:**
+    - Added Bootstrap to the base template for consistent styling across the application.
 
 ## Next Steps/Pending Actions
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

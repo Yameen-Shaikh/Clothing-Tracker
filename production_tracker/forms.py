@@ -1,5 +1,5 @@
 from django import forms
-from .models import OrderStage, Vendor, Order, Customer, Measurement, PipelineStage, Particulars
+from .models import OrderStage, Vendor, Order, Customer, Measurement, PipelineStage, Invoice
 
 class OrderStatusUpdateForm(forms.ModelForm):
     class Meta:
@@ -20,7 +20,7 @@ class OrderStageUpdateForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['order_placed_on', 'completion_date', 'specifications']
+        fields = ['order_placed_on', 'completion_date', 'specifications', 'total_amount']
         widgets = {
             'order_placed_on': forms.DateInput(attrs={'type': 'date'}),
             'completion_date': forms.DateInput(attrs={'type': 'date'}),
@@ -68,15 +68,14 @@ class PipelineStageForm(forms.ModelForm):
         model = PipelineStage
         fields = ['name']
 
-class OrderForm(forms.ModelForm):
+class InvoiceForm(forms.ModelForm):
     class Meta:
-        model = Order
-        fields = ['order_placed_on', 'completion_date', 'specifications']
+        model = Invoice
+        fields = ['total_amount', 'paid_on_date', 'paid_amount']
         widgets = {
-            'order_placed_on': forms.DateInput(attrs={'type': 'date'}),
-            'completion_date': forms.DateInput(attrs={'type': 'date'}),
-            'specifications': forms.Textarea(attrs={'rows': 3}),
+            'paid_on_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
 
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:

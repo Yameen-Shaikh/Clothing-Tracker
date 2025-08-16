@@ -2,26 +2,32 @@
 
 {% block content %}
     <h1>Invoices</h1>
-    <table>
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>Order</th>
-                <th>Invoice Number</th>
-                <th>Amount</th>
-                <th>Date Issued</th>
-                <th>Date Due</th>
-                <th>Paid</th>
+                <th>Invoice ID</th>
+                <th>Total Amount</th>
+                <th>Paid on Date</th>
+                <th>Paid Amount</th>
+                <th>Orders</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for invoice in invoices %}
                 <tr>
-                    <td>{{ invoice.order.order_number }}</td>
-                    <td>{{ invoice.invoice_number }}</td>
-                    <td>{{ invoice.amount }}</td>
-                    <td>{{ invoice.date_issued }}</td>
-                    <td>{{ invoice.date_due }}</td>
-                    <td>{{ invoice.paid }}</td>
+                    <td>{{ invoice.id }}</td>
+                    <td>{{ invoice.total_amount }}</td>
+                    <td>{{ invoice.paid_on_date }}</td>
+                    <td>{{ invoice.paid_amount }}</td>
+                    <td>
+                        {% for order in invoice.orders.all %}
+                            <a href="{% url 'order_detail' order.id %}">{{ order.id }}</a>{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'invoice_edit' invoice.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

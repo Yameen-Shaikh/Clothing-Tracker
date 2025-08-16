@@ -4,18 +4,45 @@ from django.views import View
 from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView
 from django.urls import reverse_lazy, reverse
 from .models import Order, OrderStage, Customer, Measurement, Vendor, PipelineStage, Invoice
-from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm
+from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm, InvoiceForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from datetime import date
 from django.contrib.auth.views import LoginView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Sum, Count, Q
 from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_superuser
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AddOrdersToInvoiceView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        data = json.loads(request.body)
+        order_ids = data.get('order_ids', [])
+        
+        orders_to_add = Order.objects.filter(id__in=order_ids)
+        invoice.orders.add(*orders_to_add)
+        
+        return JsonResponse({'success': True, 'message': 'Orders added successfully.'})
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RemoveOrderFromInvoiceView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        data = json.loads(request.body)
+        order_id = data.get('order_id')
+        
+        order_to_remove = get_object_or_404(Order, pk=order_id)
+        invoice.orders.remove(order_to_remove)
+        
+        return JsonResponse({'success': True, 'message': 'Order removed successfully.'})
 
 class CustomerDetailUpdateView(LoginRequiredMixin, View):
     template_name = 'production_tracker/customer_search_detail.html'
@@ -124,6 +151,15 @@ class MeasurementSearchView(LoginRequiredMixin, View):
         results = [{'id': m.id, 'customer_name': m.customer.name, 'type': m.measurement_type} for m in measurements]
         return JsonResponse(results, safe=False)
 
+class OrderSearchView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('query', '')
+        orders = Order.objects.filter(
+            Q(id__icontains=query) | Q(customer__name__icontains=query) | Q(customer__phone__icontains=query)
+        ).select_related('customer')
+        results = [{'id': order.id, 'customer_name': order.customer.name, 'amount': order.amount} for order in orders]
+        return JsonResponse(results, safe=False)
+
 class CustomLoginView(LoginView):
     template_name = 'production_tracker/login.html'
     fields = '__all__'
@@ -165,8 +201,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # Invoice Analytics
         total_invoice_amount = Invoice.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-        paid_invoices = Invoice.objects.filter(paid=True).count()
-        unpaid_invoices = Invoice.objects.filter(paid=False).count()
+        paid_invoices = Invoice.objects.filter(paid_amount__gt=0).count()
+        unpaid_invoices = Invoice.objects.filter(paid_amount=0).count()
 
         context['total_invoice_amount'] = total_invoice_amount / 100
         context['paid_invoices'] = paid_invoices
@@ -403,6 +439,61 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     model = Invoice
     template_name = 'production_tracker/invoice_list.html'
     context_object_name = 'invoices'
+
+class PickOrdersView(LoginRequiredMixin, View):
+    template_name = 'production_tracker/pick_orders.html'
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('q')
+        orders = Order.objects.none()
+        if query:
+            customers = Customer.objects.filter(Q(name__icontains=query) | Q(phone__icontains=query))
+            orders = Order.objects.filter(customer__in=customers)
+        
+        return render(request, self.template_name, {
+            'orders': orders,
+            'query': query,
+        })
+
+class CreateInvoiceView(LoginRequiredMixin, View):
+    template_name = 'production_tracker/create_invoice.html'
+
+    def post(self, request, *args, **kwargs):
+        order_ids = request.POST.getlist('order_ids')
+        if not order_ids:
+            messages.error(request, 'Please select at least one order.')
+            return redirect('pick_orders')
+
+        orders = Order.objects.filter(id__in=order_ids)
+        total_amount = orders.aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        if 'create_invoice' in request.POST:
+            paid_amount = int(request.POST.get('paid_amount', 0))
+            invoice = Invoice.objects.create(
+                total_amount=total_amount,
+                paid_on_date=date.today(),
+                paid_amount=paid_amount
+            )
+            invoice.orders.set(orders)
+            messages.success(request, 'Invoice created successfully.')
+            return redirect('invoice_list')
+
+        return render(request, self.template_name, {
+            'orders': orders,
+            'total_amount': total_amount,
+        })
+
+class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Invoice
+    form_class = InvoiceForm
+    template_name = 'production_tracker/invoice_edit.html'
+    success_url = reverse_lazy('invoice_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Invoice'
+        context['invoice'] = self.object  # Pass the invoice object to the template
+        return context
 
 class OrderCreateView(LoginRequiredMixin, CreateView):
     model = Order

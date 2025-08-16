@@ -103,6 +103,7 @@ class Order(models.Model):
     specifications = models.TextField(blank=True)
     completion_date = models.DateField(null=True, blank=True, help_text="Date when the order was completed.")
     amount = models.IntegerField(default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
+    total_amount = models.IntegerField(default=0)
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     measurement = models.ForeignKey(Measurement, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -129,11 +130,5 @@ class Invoice(models.Model):
     id = models.AutoField(primary_key=True)
     total_amount = models.IntegerField(default=0, help_text="Total amount of the invoice. Stored as integer, e.g., in cents/paise.")
     paid_on_date = models.DateField(null=True, blank=True)
-    paid = models.BooleanField(default=False)
+    paid_amount = models.IntegerField(default=0)
 
-class Particulars(models.Model):
-    id = models.AutoField(primary_key=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='particulars')
-    name = models.CharField(max_length=20, help_text="Name or description of the particular item.")
-    details = models.CharField(max_length=100, blank=True, help_text="Additional details about the particular item.")
-    amount = models.IntegerField(help_text="Amount for this particular item. Stored as integer, e.g., in cents/paise.")

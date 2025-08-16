@@ -19,6 +19,7 @@
 {% if orders %}
 <form method="post" action="{% url 'create_invoice' %}">
   {% csrf_token %}
+  <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
   <table class="table table-striped">
     <thead>
       <tr>
@@ -37,7 +38,7 @@
         <td>{{ order.customer.name }}</td>
         <td>{{ order.customer.phone }}</td>
         <td>
-          <input type="checkbox" name="order_ids" value="{{ order.id }}" />
+          <input type="checkbox" name="order_ids" value="{{ order.id }}" {% if order.is_selected %}checked{% endif %} />
         </td>
       </tr>
       {% endfor %}

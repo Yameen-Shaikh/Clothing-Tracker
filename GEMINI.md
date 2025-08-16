@@ -185,6 +185,21 @@ All views are protected by `LoginRequiredMixin`.
     - "Filter" button changed to "Search" in `measurement_list.html` and `order_list.html`.
     - "View" and "Edit" actions in `measurement_list.html` are now styled as buttons with spacing.
     - Button text changes in `customer_form.html`, `measurement_form.html`, `create_invoice.html`, `invoice_edit.html`, and `order_list.html`.
+- **Agent-Made Changes:**
+    - **Dynamic Vendor Filtering in Order Stages:**
+        - Added `get_vendors_by_stage` view and URL (`/vendors/by-stage/<int:stage_id>/`).
+        - Updated `order_detail.html` and `order_stage_manage.html` to dynamically filter vendors based on selected stage using AJAX.
+    - **Order Creation Validation:**
+        - Reverted `measurement` field from `OrderForm` in `production_tracker/forms.py`.
+        - Modified `OrderCreateView` in `production_tracker/views.py` to prevent duplicate orders for the same measurement, displaying a popup message (`messages.error`) and clearing the form fields.
+    - **Invoice Functionality Enhancements:**
+        - Added search by order ID to `InvoiceListView` (`invoice_list.html` and `production_tracker/views.py`).
+        - Implemented validation in `CreateInvoiceView` to prevent creating invoices with already-invoiced orders, displaying a popup message (`messages.error`).
+        - Improved `CreateInvoiceView` and `PickOrdersView` to retain state (search query and selected orders) on `pick_orders.html` after validation errors.
+    - **Order Edit Functionality:**
+        - Added "Edit" button to `OrderListView` (`order_list.html`).
+        - Added `order_edit` URL pattern (`/orders/<int:pk>/update/`).
+        - Created `OrderUpdateView` in `production_tracker/views.py` to handle order editing.
 
 ## Next Steps/Pending Actions
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

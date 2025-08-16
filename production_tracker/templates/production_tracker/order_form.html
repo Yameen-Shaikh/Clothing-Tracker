@@ -1,7 +1,7 @@
 {% extends 'production_tracker/base.html' %}
 
 {% block content %}
-    <h1>Create New Order</h1>
+    <h1>{{ title }}</h1>
     
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -31,7 +31,7 @@
 
             const measurementSelect = document.getElementById('measurement-select');
 
-            function fetchMeasurements(customerId) {
+            function fetchMeasurements(customerId, selectedMeasurementId = null) {
                 if (customerId) {
                     fetch(`/api/measurement-search/?customer_id=${customerId}`)
                         .then(response => response.json())
@@ -44,11 +44,28 @@
                                 measurementSelect.appendChild(option);
                             });
                             measurementSelect.disabled = false;
+                            if (selectedMeasurementId) {
+                                measurementSelect.value = selectedMeasurementId;
+                            }
                         });
                 } else {
                     measurementSelect.innerHTML = '<option value="">-- Select a Measurement --</option>';
                     measurementSelect.disabled = true;
                 }
+            }
+
+            // Pre-populate customer and measurement fields if data is available (for edit view)
+            const initialCustomerId = "{{ selected_customer_id }}";
+            const initialCustomerName = "{{ selected_customer_name }}";
+            const initialMeasurementId = "{{ selected_measurement_id }}";
+
+            if (initialCustomerId && initialCustomerName) {
+                selectedCustomerId.value = initialCustomerId;
+                customerSearchInput.value = initialCustomerName;
+                fetchMeasurements(initialCustomerId, initialMeasurementId);
+            } else {
+                // Initial state: measurement dropdown disabled if no customer is pre-selected
+                measurementSelect.disabled = true;
             }
 
             customerSearchInput.addEventListener('keyup', function() {
@@ -77,9 +94,6 @@
                     fetchMeasurements(null); // Clear measurements if no customer selected
                 }
             });
-
-            // Initial state: measurement dropdown disabled
-            measurementSelect.disabled = true;
         });
     </script>
 {% endblock %}

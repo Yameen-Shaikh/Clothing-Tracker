@@ -11,7 +11,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="{{ form.total_amount.id_for_label }}">Total Amount:</label>
+                            <label for="{{ form.total_amount.id_for_label }}">Total Amount: ₹</label>
                             {{ form.total_amount }}
                         </div>
                     </div>
@@ -25,8 +25,16 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="{{ form.paid_amount.id_for_label }}">Paid Amount:</label>
+                            <label for="{{ form.paid_amount.id_for_label }}">Paid Amount: ₹</label>
                             {{ form.paid_amount }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Balance:</label>
+                            <p>₹{{ invoice.balance }}</p>
                         </div>
                     </div>
                 </div>
@@ -50,7 +58,7 @@
                     {% for order in invoice.orders.all %}
                     <tr>
                         <td><a href="{% url 'order_detail' order.id %}">{{ order.id }}</a></td>
-                        <td>{{ order.amount }}</td>
+                        <td>₹{{ order.amount }}</td>
                         <td>{{ order.customer.name }}</td>
                         <td>{{ order.customer.phone }}</td>
                         <td>
@@ -104,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     orderSuggestionsDiv.innerHTML = '';
                     data.forEach(order => {
                         const suggestionDiv = document.createElement('div');
-                        suggestionDiv.innerHTML = `${order.id} - ${order.customer_name} (${order.amount})`;
+                        suggestionDiv.innerHTML = `${order.id} - ${order.customer_name} (₹${order.amount})`;
                         suggestionDiv.style.cursor = 'pointer';
                         suggestionDiv.classList.add('list-group-item', 'list-group-item-action');
                         suggestionDiv.dataset.orderId = order.id;

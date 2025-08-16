@@ -5,7 +5,7 @@
     <p><strong>Customer:</strong> {{ order.customer.name }}</p>
     <p><strong>Order Placed On:</strong> {{ order.order_placed_on }}</p>
     <p><strong>Completion Date:</strong> {{ order.completion_date|default:"N/A" }}</p>
-    <p><strong>Total Amount:</strong> {{ order.amount }}</p>
+    <p><strong>Total Amount:</strong> ₹{{ order.amount }}</p>
     <p><strong>Invoice:</strong> {% if order.invoice %}<a href="{% url 'invoice_edit' order.invoice.pk %}">{{ order.invoice.id }}</a>{% else %}N/A{% endif %}</p>
 
     <h2>Order Status: {{ order.status }}</h2>

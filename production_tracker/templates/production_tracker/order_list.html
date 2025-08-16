@@ -45,6 +45,7 @@
                 <th>Type</th>
                 <th>Status</th>
                 <th>Completion Date</th>
+                <th>Amount</th>
                 <!-- <th>Specifications</th> -->
                 <th>Actions</th>
             </tr>
@@ -58,8 +59,12 @@
                     <td>{{ order.measurement.measurement_type|default:"N/A" }}</td>
                     <td>{{ order.status }}</td>
                     <td>{{order.completion_date}}</td>
+                    <td>₹{{ order.amount }}</td>
                     <!-- <td>{{ order.specifications|default:"N/A" }}</td> -->
-                    <td><a href="{% url 'order_detail' order.pk %}" class="button">View</a></td>
+                    <td>
+                        <a href="{% url 'order_detail' order.pk %}" class="button">View</a>
+                        <a href="{% url 'order_edit' order.pk %}" class="button">Edit</a>
+                    </td>
                 </tr>
             {% empty %}
                 <tr>

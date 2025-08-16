@@ -14,6 +14,7 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from urllib.parse import urlencode
 
 
 class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -460,6 +461,18 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     template_name = 'production_tracker/invoice_list.html'
     context_object_name = 'invoices'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        order_id = self.request.GET.get('order_id')
+        if order_id:
+            queryset = queryset.filter(orders__id=order_id).distinct()
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['order_id'] = self.request.GET.get('order_id', '')
+        return context
+
 def get_vendors_by_stage(request, stage_id):
     vendors = Vendor.objects.filter(role__id=stage_id).values('id', 'name')
     return JsonResponse(list(vendors), safe=False)
@@ -468,15 +481,22 @@ class PickOrdersView(LoginRequiredMixin, View):
     template_name = 'production_tracker/pick_orders.html'
 
     def get(self, request, *args, **kwargs):
-        query = request.GET.get('q')
+        query = request.GET.get('q', '')
+        selected_order_ids = request.GET.getlist('order_ids') # Get list of selected order IDs
+
         orders = Order.objects.none()
         if query:
             customers = Customer.objects.filter(Q(name__icontains=query) | Q(phone__icontains=query))
             orders = Order.objects.filter(customer__in=customers)
         
+        # Mark selected orders
+        for order in orders:
+            order.is_selected = str(order.id) in selected_order_ids
+        
         return render(request, self.template_name, {
             'orders': orders,
             'query': query,
+            'selected_order_ids': selected_order_ids, # Pass selected_order_ids to template
         })
 
 class CreateInvoiceView(LoginRequiredMixin, View):
@@ -484,11 +504,27 @@ class CreateInvoiceView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         order_ids = request.POST.getlist('order_ids')
+        query = request.POST.get('q', '') # Get the query from the hidden input
         if not order_ids:
             messages.error(request, 'Please select at least one order.')
-            return redirect('pick_orders')
+            # Redirect back to pick_orders with the query
+            redirect_url = reverse('pick_orders')
+            if query:
+                redirect_url += f'?q={query}'
+            return redirect(redirect_url)
 
         orders = Order.objects.filter(id__in=order_ids)
+
+        # Check if any selected order is already associated with an invoice
+        for order in orders:
+            if order.invoice:
+                messages.error(request, f'Order {order.id} is already associated with an invoice.')
+                # Redirect back to pick_orders with the query and selected order_ids
+                redirect_url = reverse('pick_orders')
+                params = {'q': query, 'order_ids': order_ids}
+                redirect_url += '?' + urlencode(params, doseq=True)
+                return redirect(redirect_url)
+
         total_amount = orders.aggregate(Sum('amount'))['amount__sum'] or 0
         
         if 'create_invoice' in request.POST:
@@ -544,6 +580,50 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
                 return self.render_to_response(self.get_context_data(form=form))
             measurement = get_object_or_404(Measurement, pk=measurement_id)
             form.instance.measurement = measurement
+
+        return super().form_valid(form)
+
+class OrderUpdateView(LoginRequiredMixin, UpdateView):
+    model = Order
+    form_class = OrderForm
+    template_name = 'production_tracker/order_form.html' # Re-use the same form template
+    success_url = reverse_lazy('order_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Edit Order'
+        
+        # Add current customer and measurement data to context for pre-population
+        if self.object.customer:
+            context['selected_customer_id'] = self.object.customer.id
+            context['selected_customer_name'] = self.object.customer.name
+        if self.object.measurement:
+            context['selected_measurement_id'] = self.object.measurement.id
+            context['selected_measurement_type'] = self.object.measurement.measurement_type
+            context['selected_measurement_customer_name'] = self.object.measurement.customer.name
+
+        return context
+
+    def form_valid(self, form):
+        customer_id = self.request.POST.get('customer')
+        measurement_id = self.request.POST.get('measurement')
+
+        if not customer_id:
+            form.add_error(None, 'Please select a customer.')
+            return self.form_invalid(form)
+        
+        customer = get_object_or_404(Customer, pk=customer_id)
+        form.instance.customer = customer
+
+        if measurement_id:
+            # Check if this measurement is already linked to another order, excluding the current order being updated
+            if Order.objects.filter(measurement__id=measurement_id).exclude(pk=self.object.pk).exists():
+                messages.error(self.request, 'This measurement is already linked to another order.')
+                return self.form_invalid(form)
+            measurement = get_object_or_404(Measurement, pk=measurement_id)
+            form.instance.measurement = measurement
+        else:
+            form.instance.measurement = None # If no measurement is selected, set it to None
 
         return super().form_valid(form)
 

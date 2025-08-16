@@ -20,7 +20,7 @@ class OrderStageUpdateForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['order_placed_on', 'completion_date', 'specifications', 'total_amount']
+        fields = ['order_placed_on', 'completion_date', 'specifications', 'amount']
         widgets = {
             'order_placed_on': forms.DateInput(attrs={'type': 'date'}),
             'completion_date': forms.DateInput(attrs={'type': 'date'}),

@@ -69,6 +69,9 @@ class Measurement(models.Model):
     # Dress measurements
     dress_length = models.FloatField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.measurement_type} for {self.customer.name}"
+
 class VendorRole(models.Model):
     id = models.SmallAutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -111,7 +114,6 @@ class Order(models.Model):
     specifications = models.TextField(blank=True)
     completion_date = models.DateField(null=True, blank=True, help_text="Date when the order was completed.")
     amount = models.IntegerField(default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
-    total_amount = models.IntegerField(default=0)
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     measurement = models.ForeignKey(Measurement, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -138,4 +140,8 @@ class Invoice(models.Model):
     total_amount = models.IntegerField(default=0, help_text="Total amount of the invoice. Stored as integer, e.g., in cents/paise.")
     paid_on_date = models.DateField(null=True, blank=True)
     paid_amount = models.IntegerField(default=0)
+
+    @property
+    def balance(self):
+        return self.total_amount - self.paid_amount
 

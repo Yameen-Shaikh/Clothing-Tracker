@@ -8,7 +8,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Add Stage</button>
+        <button type="submit" class="button">Add Stage</button>
     </form>
 
     <h2>Existing Stages</h2>
@@ -43,7 +43,7 @@
                                 {% endfor %}
                             </select><br>
                             <input type="hidden" name="note" class="note-input" value="{{ stage.note|default:"" }}">
-                            <button type="submit">Update</button>
+                            <button type="submit" class="button">Update</button>
                         </form>
                     </td>
                 </tr>

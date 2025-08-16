@@ -20,7 +20,7 @@
             <label for="search_address">Address:</label>
             <input type="text" id="search_address" name="search_address" value="{{ search_address }}" placeholder="Search by address...">
         </div>
-        <button type="submit">Search</button>
+        <button type="submit" class="button">Search</button>
     </form>
 
     
@@ -42,7 +42,7 @@
             {% csrf_token %}
             <input type="hidden" name="customer_id" value="{{ customer.id }}">
             {{ form.as_p }}
-            <button type="submit">Save Changes</button>
+            <button type="submit" class="button">Save Changes</button>
         </form>
     </div>
 {% endblock %}

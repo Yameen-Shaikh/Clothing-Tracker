@@ -30,7 +30,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary float-right">Save Changes</button>
+                <button type="submit" class="button">Update Invoice</button>
             </form>
 
             <hr>
@@ -54,7 +54,7 @@
                         <td>{{ order.customer.name }}</td>
                         <td>{{ order.customer.phone }}</td>
                         <td>
-                            <button type="button" class="btn btn-danger btn-sm remove-order" data-order-id="{{ order.id }}">Remove</button>
+                            <button type="button" class="button remove-order" data-order-id="{{ order.id }}">Remove</button>
                         </td>
                     </tr>
                     {% empty %}
@@ -73,7 +73,7 @@
                 <input type="text" id="order_search" class="form-control" placeholder="Search by Order ID or Customer Name/Phone...">
                 <div id="order_suggestions" class="custom-search-results"></div>
             </div>
-            <button type="button" id="add_selected_orders" class="btn btn-success">Add Selected Orders</button>
+            <button type="button" id="add_selected_orders" class="button">Add Selected Orders</button>
         </div>
     </div>
 </div>

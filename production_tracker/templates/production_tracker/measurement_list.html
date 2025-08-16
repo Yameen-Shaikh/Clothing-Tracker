@@ -11,7 +11,7 @@
             <input type="hidden" name="customer" id="selected-customer-id" value="{% if selected_customer_id %}{{ selected_customer_id }}{% endif %}">
         </div>
         <div class="filter-group">
-            <button type="submit">Filter</button>
+            <button type="submit">Search</button>
         </div>
     </form>
 
@@ -29,7 +29,7 @@
                     <td>{{ measurement.customer.name }}</td>
                     <td>{{ measurement.measurement_type }}</td>
                     <td>
-                        <a href="{% url 'measurement_detail' measurement.pk %}" class="button">View</a>
+                        <a href="{% url 'measurement_detail' measurement.pk %}" class="button" style="margin-right: 10px;">View</a>
                         <a href="{% url 'measurement_edit' measurement.pk %}" class="button">Edit</a>
                     </td>
                 </tr>

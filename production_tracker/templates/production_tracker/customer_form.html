@@ -4,9 +4,8 @@
     <h1>Create New Customer</h1>
 
     <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Create Customer</button>
+                {{ form.as_p }}
+        <button type="submit" class="button">Create Customer</button>
     </form>
 
     <script>

@@ -32,7 +32,7 @@
         </div>
 
         <div class="filter-group">
-            <button type="submit">Filter</button>
+            <button type="submit">Search</button>
         </div>
     </form>
 
@@ -59,7 +59,7 @@
                     <td>{{ order.status }}</td>
                     <td>{{order.completion_date}}</td>
                     <!-- <td>{{ order.specifications|default:"N/A" }}</td> -->
-                    <td><a href="{% url 'order_detail' order.pk %}" class="button">View Details</a></td>
+                    <td><a href="{% url 'order_detail' order.pk %}" class="button">View</a></td>
                 </tr>
             {% empty %}
                 <tr>

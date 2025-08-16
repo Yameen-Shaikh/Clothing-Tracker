@@ -13,7 +13,7 @@
     />
     <div id="customer-name-suggestions" class="custom-search-results"></div>
   </div>
-  <button type="submit">Search</button>
+  <button type="submit" class="button">Search</button>
 </form>
 
 {% if orders %}
@@ -43,7 +43,7 @@
       {% endfor %}
     </tbody>
   </table>
-  <button type="submit" class="btn btn-primary">Go to Invoice</button>
+  <button type="submit" class="button">Go to Invoice</button>
 </form>
 {% else %} {% if request.GET.q %}
 <p>No orders found for the given search criteria.</p>

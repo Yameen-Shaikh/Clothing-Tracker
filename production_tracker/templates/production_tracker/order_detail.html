@@ -6,13 +6,13 @@
     <p><strong>Order Placed On:</strong> {{ order.order_placed_on }}</p>
     <p><strong>Completion Date:</strong> {{ order.completion_date|default:"N/A" }}</p>
     <p><strong>Total Amount:</strong> {{ order.amount }}</p>
-    <p><strong>Invoice:</strong> {% if order.invoice %}<a href="{% url 'invoice_detail' order.invoice.pk %}">{{ order.invoice.invoice_number }}</a>{% else %}N/A{% endif %}</p>
+    <p><strong>Invoice:</strong> {% if order.invoice %}<a href="{% url 'invoice_edit' order.invoice.pk %}">{{ order.invoice.id }}</a>{% else %}N/A{% endif %}</p>
 
     <h2>Order Status: {{ order.status }}</h2>
     <form action="{% url 'update_order_status' order.pk %}" method="post">
         {% csrf_token %}
         {{ order_status_form.as_p }}
-        <button type="submit">Update Order Status</button>
+        <button type="submit" class="button">Update Order Status</button>
     </form>
 
     <h2>Current Stage: {{ current_stage.stage.name|default:"N/A" }}</h2>

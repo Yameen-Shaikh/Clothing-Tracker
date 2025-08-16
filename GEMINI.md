@@ -25,30 +25,30 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `weight`: FloatField (null=True, blank=True)
 - `chest`: FloatField (null=True, blank=True)
 - `waist`: FloatField (null=True, blank=True)
-- `hips`: FloatField (null=True, blank=True)
-- `neck`: FloatField (null=True, blank=True)
-- `sleeve_length`: FloatField (null=True, blank=True)
-- `bicep`: FloatField (null=True, blank=True)
-- `wrist`: FloatField (null=True, blank=True)
-- `shoulder_width`: FloatField (null=True, blank=True)
-- `shirt_length`: FloatField (null=True, blank=True)
-- `inseam`: FloatField (null=True, blank=True)
-- `outseam`: FloatField (null=True, blank=True)
-- `thigh`: FloatField (null=True, blank=True)
-- `knee`: FloatField (null=True, blank=True)
-- `ankle`: FloatField (null=True, blank=True)
-- `pant_length`: FloatField (null=True, blank=True)
-- `jacket_length`: FloatField (null=True, blank=True)
-- `dress_length`: FloatField (null=True, blank=True)
+- `hips`: FloatField(null=True, blank=True)
+- `neck`: FloatField(null=True, blank=True)
+- `sleeve_length`: FloatField(null=True, blank=True)
+- `bicep`: FloatField(null=True, blank=True)
+- `wrist`: FloatField(null=True, blank=True)
+- `shoulder_width`: FloatField(null=True, blank=True)
+- `shirt_length`: FloatField(null=True, blank=True)
+- `inseam`: FloatField(null=True, blank=True)
+- `outseam`: FloatField(null=True, blank=True)
+- `thigh`: FloatField(null=True, blank=True)
+- `knee`: FloatField(null=True, blank=True)
+- `ankle`: FloatField(null=True, blank=True)
+- `pant_length`: FloatField(null=True, blank=True)
+- `jacket_length`: FloatField(null=True, blank=True)
+- `dress_length`: FloatField(null=True, blank=True)
 
 ### VendorRole
 - `id`: SmallAutoField (Primary Key)
-- `name`: CharField (max_length=10)
+- `name`: CharField (max_length=100)
 
 ### Vendor
 - `id`: SmallAutoField (Primary Key)
 - `name`: CharField (max_length=100)
-- `role`: ForeignKey to `VendorRole` (on_delete=models.CASCADE)
+- `role`: ForeignKey to `PipelineStage` (on_delete=models.CASCADE)
 - `phone_numbers`: ArrayField(BigIntegerField) (blank=True, null=True, default=list, help_text="List of contact phone numbers for the vendor.")
 - `address`: TextField (blank=True)
 - `remark`: TextField (blank=True, help_text="Any additional remarks about the vendor.")
@@ -56,18 +56,21 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 ### PipelineStage
 - `id`: SmallAutoField (Primary Key)
 - `name`: CharField (max_length=20)
+- `role`: ForeignKey to `VendorRole` (on_delete=models.SET_NULL, null=True, blank=True)
 
 ### Order
 - `id`: AutoField (Primary Key)
 - `customer`: ForeignKey to `Customer` (on_delete=models.CASCADE)
 - `order_placed_on`: DateField
-- `status`: CharField (max_length=10)
+- `status`: CharField (max_length=20)
 - `completion_date`: DateField (null=True, blank=True, help_text="Date when the order was completed.")
 - `specifications`: TextField (blank=True)
 - `crocky`: BinaryField (null=True, blank=True)
 - `crocky_mimetype`: CharField (max_length=50, null=True, blank=True)
 - `amount`: IntegerField (default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
+- `total_amount`: IntegerField (default=0)
 - `invoice`: ForeignKey to `Invoice` (on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+- `measurement`: ForeignKey to `Measurement` (on_delete=models.SET_NULL, null=True, blank=True)
 
 ### OrderStage
 - `id`: AutoField (Primary Key)
@@ -76,14 +79,14 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `assigned_vendor`: ForeignKey to `Vendor` (on_delete=models.SET_NULL, null=True, blank=True)
 - `start_date`: DateField
 - `end_date`: DateField (null=True, blank=True)
-- `status`: CharField (max_length=10)
-- `remark`: TextField (blank=True)
+- `status`: CharField (max_length=20)
+- `note`: TextField (blank=True, help_text="Any additional notes for this stage.")
 
 ### Invoice
 - `id`: AutoField (Primary Key)
 - `total_amount`: IntegerField (default=0, help_text="Total amount of the invoice. Stored as integer, e.g., in cents/paise.")
 - `paid_on_date`: DateField (null=True, blank=True)
-- `paid`: BooleanField (default=False)
+- `paid_amount`: IntegerField (default=0)
 
 ### Particulars
 - `id`: AutoField (Primary Key)
@@ -94,8 +97,9 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 
 ## Django Admin Configuration
 - All models are registered with the Django admin (`production_tracker/admin.py`).
-- `OrderAdmin` uses `OrderStageInline` and `ParticularsInline` for direct editing of `OrderStage` and `Particulars` records.
+- `OrderAdmin` uses `OrderStageInline` for direct editing of `OrderStage` records.
 - Custom `list_display` is configured for `Order`, `Customer`, and `Vendor` models.
+- `VendorAdmin` now uses a default form that displays `PipelineStage` objects for the `role` field.
 
 ## Django Rest Framework (DRF) & Simple JWT
 - DRF and `djangorestframework-simplejwt` are installed and configured in `clothing_factory/settings.py`.
@@ -158,16 +162,29 @@ All views are protected by `LoginRequiredMixin`.
 - Logout functionality is available.
 
 ## Recent Changes
-- **Dashboard:**
-    - Fixed JavaScript errors that were preventing the charts from rendering.
-    - Refactored the dashboard to use the `json_script` template tag for safely passing data to the frontend.
-    - Corrected the calculation of the total invoice amount.
-- **Measurements:**
-    - Fixed `NoReverseMatch` errors in the measurement list and pipeline stage list pages.
-    - Refactored the measurement views to have separate views for creating, updating, and viewing measurements.
-    - Updated the measurement form to use Bootstrap for styling.
-- **General:**
-    - Added Bootstrap to the base template for consistent styling across the application.
+- **Model Changes:**
+    - `Vendor` model's `role` field now directly links to `PipelineStage`.
+    - `VendorRole` model was introduced and then its relationship with `Vendor` was removed.
+    - `OrderStage` model's `remark` field was replaced with `note`.
+- **Admin Interface:**
+    - The "role" field in the Django admin for `Vendor` now displays `PipelineStage` objects.
+    - All admin buttons are styled consistently with the main application's dark gold theme.
+- **Order Management Logic:**
+    - Order status now dynamically updates based on the status of its associated `OrderStage`s (In-Progress, Completed, Pending).
+    - Prevention of duplicate `OrderStage` entries for the same `Order` and `PipelineStage`.
+    - Prevention of creating new `Order`s with `Measurement`s already linked to another `Order`.
+    - Automatic progression of `OrderStage` status (next stage becomes "In-Progress" when current is "Completed").
+- **Dynamic Vendor Filtering:**
+    - The "Assigned Vendor" dropdown in the "Add New Stage" form now dynamically displays vendors related to the selected `PipelineStage` via an AJAX call.
+- **Bug Fixes:**
+    - Fixed `NoReverseMatch` error for `invoice_detail` by changing the URL name in `order_detail.html` to `invoice_edit` and updating the displayed field to `invoice.id`.
+    - Fixed CSRF token missing error in `customer_form.html`.
+    - Fixed `FieldError` due to `remark` field removal in `OrderStage` and `Vendor` models.
+- **Button Styling (Frontend):**
+    - All buttons in the main application are styled consistently with the dark gold theme.
+    - "Filter" button changed to "Search" in `measurement_list.html` and `order_list.html`.
+    - "View" and "Edit" actions in `measurement_list.html` are now styled as buttons with spacing.
+    - Button text changes in `customer_form.html`, `measurement_form.html`, `create_invoice.html`, `invoice_edit.html`, and `order_list.html`.
 
 ## Next Steps/Pending Actions
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

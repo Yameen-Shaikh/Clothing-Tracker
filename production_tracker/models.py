@@ -69,9 +69,17 @@ class Measurement(models.Model):
     # Dress measurements
     dress_length = models.FloatField(null=True, blank=True)
 
+class VendorRole(models.Model):
+    id = models.SmallAutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
 class PipelineStage(models.Model):
     id = models.SmallAutoField(primary_key=True)
     name = models.CharField(max_length=20)
+    role = models.ForeignKey(VendorRole, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -82,7 +90,7 @@ class Vendor(models.Model):
     role = models.ForeignKey(PipelineStage, on_delete=models.CASCADE)
     phone_numbers = ArrayField(models.BigIntegerField(), blank=True, null=True, default=list, help_text="List of contact phone numbers for the vendor.")
     address = models.TextField(blank=True)
-    note = models.TextField(blank=True, help_text="Any additional notes about the vendor.")
+    remark = models.TextField(blank=True, help_text="Any additional remarks about the vendor.")
 
     def __str__(self):
         return self.name
@@ -123,7 +131,6 @@ class OrderStage(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
-    remark = models.TextField(blank=True)
     note = models.TextField(blank=True, help_text="Any additional notes for this stage.")
 
 class Invoice(models.Model):

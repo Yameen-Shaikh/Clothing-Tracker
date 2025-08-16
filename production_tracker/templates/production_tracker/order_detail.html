@@ -39,3 +39,42 @@
         </tbody>
     </table>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stageSelect = document.getElementById('id_stage');
+        const assignedVendorSelect = document.getElementById('id_assigned_vendor');
+
+        // Function to fetch and populate vendors
+        function fetchAndPopulateVendors(stageId) {
+            // Clear existing options, add default
+            assignedVendorSelect.innerHTML = '<option value="">---------\</option>';
+
+            if (stageId) {
+                fetch(`/vendors/by-stage/${stageId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(vendor => {
+                            const option = document.createElement('option');
+                            option.value = vendor.id;
+                            option.textContent = vendor.name;
+                            assignedVendorSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching vendors:', error));
+            }
+        }
+
+        // Event listener for stage change
+        stageSelect.addEventListener('change', function() {
+            fetchAndPopulateVendors(this.value);
+        });
+
+        // Initial population if a stage is already selected (e.g., on page load with existing data)
+        if (stageSelect.value) {
+            fetchAndPopulateVendors(stageSelect.value);
+        }
+    });
+</script>
+{% endblock %}

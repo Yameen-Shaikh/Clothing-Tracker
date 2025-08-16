@@ -151,6 +151,20 @@ class MeasurementSearchView(LoginRequiredMixin, View):
         results = [{'id': m.id, 'customer_name': m.customer.name, 'type': m.measurement_type} for m in measurements]
         return JsonResponse(results, safe=False)
 
+class VendorSearchView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        stage_id = request.GET.get('stage_id')
+        vendors = Vendor.objects.none()
+        if stage_id:
+            try:
+                stage = PipelineStage.objects.get(id=stage_id)
+                if stage.role:
+                    vendors = Vendor.objects.filter(role=stage.role)
+            except PipelineStage.DoesNotExist:
+                pass
+        results = [{'id': vendor.id, 'name': vendor.name} for vendor in vendors]
+        return JsonResponse(results, safe=False)
+
 class OrderSearchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         query = request.GET.get('query', '')
@@ -296,11 +310,20 @@ class OrderStageManageView(LoginRequiredMixin, View):
         order = get_object_or_404(Order, pk=pk)
         form = OrderStageCreateForm(request.POST)
         if form.is_valid():
-            order_stage = form.save(commit=False)
-            order_stage.order = order
-            order_stage.status = 'New'
-            order_stage.save()
-            messages.success(request, 'Order Stage added successfully!')
+            stage = form.cleaned_data['stage']
+            if OrderStage.objects.filter(order=order, stage=stage).exists():
+                messages.error(request, 'This stage has already been added to the order.')
+            else:
+                order_stage = form.save(commit=False)
+                order_stage.order = order
+                order_stage.status = 'New'
+                order_stage.save()
+                messages.success(request, 'Order Stage added successfully!')
+                
+                # Update order status
+                order.status = 'In-Progress'
+                order.save()
+
             return redirect('order_stage_manage', pk=order.pk)
         else:
             order_stages = order.orderstage_set.all().order_by('stage__id')
@@ -317,26 +340,23 @@ class UpdateOrderStageView(LoginRequiredMixin, View):
         order_stage = get_object_or_404(OrderStage, pk=pk)
         form = OrderStageUpdateForm(request.POST, instance=order_stage)
         if form.is_valid():
-            updated_stage = form.save(commit=False)
-            if updated_stage.status == 'Completed':
-                updated_stage.end_date = date.today()
-                
-                # Get the next stage in the sequence
-                next_stage = OrderStage.objects.filter(
-                    order=updated_stage.order, 
-                    stage__id__gt=updated_stage.stage.id
-                ).order_by('stage__id').first()
+            updated_stage = form.save()
+            order = updated_stage.order
 
+            if updated_stage.status == 'Completed':
+                next_stage = order.orderstage_set.filter(stage__id__gt=updated_stage.stage.id).order_by('stage__id').first()
                 if next_stage:
                     next_stage.status = 'In-Progress'
                     next_stage.save()
-                else:
-                    # This is the last stage, so mark the order as completed
-                    order = updated_stage.order
-                    order.status = 'Completed'
-                    order.save()
 
-            updated_stage.save()
+            if order.orderstage_set.filter(status='In-Progress').exists():
+                order.status = 'In-Progress'
+            elif order.orderstage_set.exclude(status='Completed').count() == 0:
+                order.status = 'Completed'
+            else:
+                order.status = 'Pending'
+            order.save()
+
         return redirect('order_stage_manage', pk=order_stage.order.pk)
 
 class UpdateOrderStatusView(LoginRequiredMixin, View):
@@ -440,6 +460,10 @@ class InvoiceListView(LoginRequiredMixin, ListView):
     template_name = 'production_tracker/invoice_list.html'
     context_object_name = 'invoices'
 
+def get_vendors_by_stage(request, stage_id):
+    vendors = Vendor.objects.filter(role__id=stage_id).values('id', 'name')
+    return JsonResponse(list(vendors), safe=False)
+
 class PickOrdersView(LoginRequiredMixin, View):
     template_name = 'production_tracker/pick_orders.html'
 
@@ -513,6 +537,11 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
         form.instance.customer = customer
 
         if measurement_id:
+            if Order.objects.filter(measurement__id=measurement_id).exists():
+                messages.error(self.request, 'Order already exists for this measurement.')
+                # Re-render the form with empty fields
+                form = self.form_class() # Create a new empty form instance
+                return self.render_to_response(self.get_context_data(form=form))
             measurement = get_object_or_404(Measurement, pk=measurement_id)
             form.instance.measurement = measurement
 

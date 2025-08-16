@@ -1,9 +1,10 @@
 from django.urls import path
+from . import views
 from .views import (
     DashboardView,
     OrderListView, OrderDetailView, UpdateOrderStageView, OrderCreateView, UpdateOrderStatusView, OrderStageManageView,
     CustomerListView, CustomerCreateView, CustomerSearchView, CustomerDetailUpdateView,
-    MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView, OrderSearchView,
+    MeasurementListView, MeasurementCreateView, MeasurementUpdateView, MeasurementSearchView, MeasurementDetailView, OrderSearchView, VendorSearchView,
     VendorListView, VendorCreateView, VendorUpdateView,
     PipelineStageListView, PipelineStageCreateView, PipelineStageUpdateView, InvoiceListView, PickOrdersView, CreateInvoiceView, InvoiceUpdateView, AddOrdersToInvoiceView, RemoveOrderFromInvoiceView,
     CustomLoginView
@@ -26,6 +27,7 @@ urlpatterns = [
     path('api/customer-search/', CustomerSearchView.as_view(), name='customer_search'),
     path('api/measurement-search/', MeasurementSearchView.as_view(), name='measurement_search'),
     path('api/order-search/', OrderSearchView.as_view(), name='order_search'),
+    path('api/vendor-search/', VendorSearchView.as_view(), name='vendor_search'),
     
     path('measurements/', MeasurementListView.as_view(), name='measurement_list'),
     path('measurements/new/', MeasurementCreateView.as_view(), name='measurement_new'),
@@ -44,4 +46,5 @@ urlpatterns = [
     path('invoices/<int:pk>/edit/', InvoiceUpdateView.as_view(), name='invoice_edit'),
     path('invoices/<int:pk>/add-orders/', AddOrdersToInvoiceView.as_view(), name='add_orders_to_invoice'),
     path('invoices/<int:pk>/remove-order/', RemoveOrderFromInvoiceView.as_view(), name='remove_order_from_invoice'),
+    path('vendors/by-stage/<int:stage_id>/', views.get_vendors_by_stage, name='get_vendors_by_stage'),
 ]

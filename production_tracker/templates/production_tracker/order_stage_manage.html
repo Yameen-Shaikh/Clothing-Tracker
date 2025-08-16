@@ -43,7 +43,7 @@
                                 {% endfor %}
                             </select><br>
                             <input type="hidden" name="note" class="note-input" value="{{ stage.note|default:"" }}">
-                            <button type="submit" class="button">Update</button>
+                            <br><button type="submit" class="button">Update</button>
                         </form>
                     </td>
                 </tr>
@@ -51,13 +51,35 @@
         </tbody>
     </table>
 
-    <a href="{% url 'order_detail' order.pk %}" class="button">Back to Order Detail</a>
+    <br><a href="{% url 'order_detail' order.pk %}" class="button">Back to Order Detail</a>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const stageSelect = document.getElementById('id_stage');
+    const vendorSelect = document.getElementById('id_assigned_vendor');
+
+    stageSelect.addEventListener('change', function() {
+        const stageId = this.value;
+        if (stageId) {
+            fetch(`/vendors/by-stage/${stageId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    vendorSelect.innerHTML = '<option value="">-- Select a vendor --</option>';
+                    data.forEach(vendor => {
+                        const option = document.createElement('option');
+                        option.value = vendor.id;
+                        option.textContent = vendor.name;
+                        vendorSelect.appendChild(option);
+                    });
+                });
+        } else {
+            vendorSelect.innerHTML = '<option value="">-- Select a vendor --</option>';
+        }
+    });
+
     document.querySelectorAll('.status-select, .vendor-select').forEach(select => {
         select.addEventListener('change', function() {
             const noteInput = this.closest('.update-form').querySelector('.note-input');

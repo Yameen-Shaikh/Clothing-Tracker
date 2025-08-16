@@ -61,7 +61,7 @@ class MeasurementForm(forms.ModelForm):
 class VendorForm(forms.ModelForm):
     class Meta:
         model = Vendor
-        fields = ['name', 'role', 'phone_numbers', 'address', 'note']
+        fields = ['name', 'role', 'phone_numbers', 'address', 'remark']
 
 class PipelineStageForm(forms.ModelForm):
     class Meta:
@@ -80,7 +80,7 @@ class InvoiceForm(forms.ModelForm):
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:
         model = OrderStage
-        fields = ['stage', 'assigned_vendor', 'start_date', 'end_date', 'remark']
+        fields = ['stage', 'assigned_vendor', 'start_date', 'end_date', 'note']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'})

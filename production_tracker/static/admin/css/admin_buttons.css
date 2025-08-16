@@ -1,0 +1,65 @@
+/* production_tracker/static/admin/css/admin_buttons.css */
+
+/* General button styling for Django Admin */
+#changelist .actions button,
+.submit-row input[type="submit"],
+.button.default,
+.button.addlink,
+.button.changelink,
+.button.deletelink,
+.button.historylink,
+.button.viewsitelink,
+.object-tools a.addlink,
+.object-tools a.changelink,
+.object-tools a.deletelink,
+.object-tools a.historylink,
+.object-tools a.viewsitelink {
+    background-color: var(--dark-gold); /* Dark gold button */
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1.05em;
+    transition: background-color 0.3s ease, transform 0.2s ease,
+      box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    display: inline-block;
+    margin-right: 5px; /* Space between buttons */
+}
+
+#changelist .actions button:hover,
+.submit-row input[type="submit"]:hover,
+.button.default:hover,
+.button.addlink:hover,
+.button.changelink:hover,
+.button.deletelink:hover,
+.button.historylink:hover,
+.button.viewsitelink:hover,
+.object-tools a.addlink:hover,
+.object-tools a.changelink:hover,
+.object-tools a.deletelink:hover,
+.object-tools a.historylink:hover,
+.object-tools a.viewsitelink:hover {
+    background-color: var(--rich-red); /* Rich red on hover */
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+/* Delete button specific styling */
+.button.deletelink,
+.object-tools a.deletelink {
+    background-color: #dc3545; /* Bootstrap danger red */
+}
+
+.button.deletelink:hover,
+.object-tools a.deletelink:hover {
+    background-color: #c82333;
+}
+
+/* Import variables from main style.css */
+@import url("../../../production_tracker/css/style.css");

@@ -25,7 +25,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/Clothing-Tracker:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/clothing-tracker:latest
 
       - name: Trigger Render Deploy
         run: curl "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

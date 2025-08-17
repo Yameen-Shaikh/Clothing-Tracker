@@ -32,4 +32,4 @@ EXPOSE 8000
 # --- FIXED: Corrected the path to your WSGI application ---
 # Replace 'your_project_name' with the actual name of your Django project folder
 # (the one that contains settings.py and wsgi.py).
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "Clothing-Tracker.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "clothing_factory.wsgi:application"]

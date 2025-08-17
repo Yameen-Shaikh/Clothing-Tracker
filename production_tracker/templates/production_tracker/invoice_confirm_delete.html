@@ -1,0 +1,11 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Confirm Delete</h1>
+    <p>Are you sure you want to delete invoice #{{ object.id }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button">Yes, delete</button>
+        <a href="{% url 'invoice_list' %}" class="button">No, cancel</a>
+    </form>
+{% endblock %}

@@ -1,192 +1,254 @@
-{% extends 'production_tracker/base.html' %}
-{% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h2>{{ title }}</h2>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.total_amount.id_for_label }}">Total Amount: ₹</label>
-                            {{ form.total_amount }}
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.paid_on_date.id_for_label }}">Paid on Date:</label>
-                            {{ form.paid_on_date }}
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="{{ form.paid_amount.id_for_label }}">Paid Amount: ₹</label>
-                            {{ form.paid_amount }}
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Balance:</label>
-                            <p>₹{{ invoice.balance }}</p>
-                        </div>
-                    </div>
-                </div>
-                <button type="submit" class="button">Update Invoice</button>
-            </form>
-
-            <hr>
-
-            <h3>Associated Orders</h3>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Amount</th>
-                        <th>Customer Name</th>
-                        <th>Mobile Number</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in invoice.orders.all %}
-                    <tr>
-                        <td><a href="{% url 'order_detail' order.id %}">{{ order.id }}</a></td>
-                        <td>₹{{ order.amount }}</td>
-                        <td>{{ order.customer.name }}</td>
-                        <td>{{ order.customer.phone }}</td>
-                        <td>
-                            <button type="button" class="button remove-order" data-order-id="{{ order.id }}">Remove</button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5">No orders associated with this invoice.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <hr>
-
-            <h3>Add New Orders</h3>
-            <div class="form-group">
-                <label for="order_search">Search Orders to Add:</label>
-                <input type="text" id="order_search" class="form-control" placeholder="Search by Order ID or Customer Name/Phone...">
-                <div id="order_suggestions" class="custom-search-results"></div>
-            </div>
-            <button type="button" id="add_selected_orders" class="button">Add Selected Orders</button>
-        </div>
+{% extends 'production_tracker/base.html' %} {% block content %}
+<div
+  class="container mt-4"
+  id="invoice-container"
+  data-invoice-id="{{ invoice.id }}"
+  data-add-orders-url="{% url 'add_orders_to_invoice' invoice.id %}"
+  data-remove-order-url="{% url 'remove_order_from_invoice' invoice.id %}"
+>
+  <div class="card">
+    <div class="card-header">
+      <h2>{{ title }}</h2>
     </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.total_amount.id_for_label }}"
+                >Total Amount: ₹</label
+              >
+              {{ form.total_amount }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.paid_on_date.id_for_label }}"
+                >Paid on Date:</label
+              >
+              {{ form.paid_on_date }}
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="{{ form.paid_amount.id_for_label }}"
+                >Paid Amount: ₹</label
+              >
+              {{ form.paid_amount }}
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Balance:</label>
+              <p>₹{{ invoice.balance }}</p>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="button">Update Invoice</button>
+      </form>
+
+      <hr />
+
+      <h3>Associated Orders</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Amount</th>
+            <th>Customer Name</th>
+            <th>Mobile Number</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in invoice.orders.all %}
+          <tr>
+            <td>
+              <a href="{% url 'order_detail' order.id %}">{{ order.id }}</a>
+            </td>
+            <td>₹{{ order.amount_in_rupees }}</td>
+            <td>{{ order.customer.name }}</td>
+            <td>{{ order.customer.phone }}</td>
+            <td>
+              <button
+                type="button"
+                class="button remove-order"
+                data-order-id="{{ order.id }}"
+              >
+                Remove
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">No orders associated with this invoice.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <hr />
+
+      <h3>Add New Orders</h3>
+      <div class="form-group">
+        <label for="order_search">Search Orders to Add:</label>
+        <input
+          type="text"
+          id="order_search"
+          class="form-control"
+          placeholder="Search by Order ID or Customer Name/Phone..."
+        />
+        <div id="order_suggestions" class="custom-search-results"></div>
+      </div>
+      <div class="mt-2">
+        <strong>Selected to add:</strong>
+        <div id="selected_orders_display" class="d-flex flex-wrap">
+          <span class="text-muted">None</span>
+        </div>
+      </div>
+      <button type="button" id="add_selected_orders" class="button mt-2">
+        Add Selected Orders
+      </button>
+    </div>
+  </div>
 </div>
-{% endblock %} {# This is the missing endblock for content #}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const orderSearchInput = document.getElementById('order_search');
-    const orderSuggestionsDiv = document.getElementById('order_suggestions');
-    const addSelectedOrdersBtn = document.getElementById('add_selected_orders');
-    let selectedOrderIds = new Set(); // To keep track of orders to add
+  document.addEventListener("DOMContentLoaded", function () {
+    // --- FIXED: Get context from data-* attributes for better practice ---
+    const invoiceContainer = document.getElementById("invoice-container");
+    const invoiceId = invoiceContainer.dataset.invoiceId;
+    const addOrdersUrl = invoiceContainer.dataset.addOrdersUrl;
+    const removeOrderUrl = invoiceContainer.dataset.removeOrderUrl; // We will use this in the remove handler
 
-    // Function to update the displayed orders (after add/remove)
-    function updateOrdersTable() {
-        // This function would typically re-render the orders table
-        // For now, we'll just reload the page to reflect changes
-        location.reload();
+    // --- FIXED: Get the CSRF token from the hidden input generated by Django ---
+    const csrfToken = document.querySelector(
+      "[name=csrfmiddlewaretoken]"
+    ).value;
+
+    const orderSearchInput = document.getElementById("order_search");
+    const orderSuggestionsDiv = document.getElementById("order_suggestions");
+    const addSelectedOrdersBtn = document.getElementById("add_selected_orders");
+    const selectedOrdersDisplay = document.getElementById(
+      "selected_orders_display"
+    );
+
+    let selectedOrders = new Map(); // Use a Map to store both ID and display text
+
+    function updateSelectedOrdersDisplay() {
+      selectedOrdersDisplay.innerHTML = "";
+      if (selectedOrders.size === 0) {
+        selectedOrdersDisplay.innerHTML =
+          '<span class="text-muted">None</span>';
+        return;
+      }
+      selectedOrders.forEach((text, id) => {
+        const pill = document.createElement("span");
+        pill.className = "badge badge-primary mr-2 mb-2 p-2";
+        pill.textContent = text;
+        selectedOrdersDisplay.appendChild(pill);
+      });
     }
 
     // Autocomplete for order search
-    orderSearchInput.addEventListener('keyup', function() {
-        const query = orderSearchInput.value;
-        if (query.length > 2) {
-            fetch(`/api/order-search/?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    orderSuggestionsDiv.innerHTML = '';
-                    data.forEach(order => {
-                        const suggestionDiv = document.createElement('div');
-                        suggestionDiv.innerHTML = `${order.id} - ${order.customer_name} (₹${order.amount})`;
-                        suggestionDiv.style.cursor = 'pointer';
-                        suggestionDiv.classList.add('list-group-item', 'list-group-item-action');
-                        suggestionDiv.dataset.orderId = order.id;
-                        suggestionDiv.addEventListener('click', function() {
-                            // Add to a temporary list of selected orders
-                            selectedOrderIds.add(order.id);
-                            orderSearchInput.value = ''; // Clear search input
-                            orderSuggestionsDiv.innerHTML = ''; // Clear suggestions
-                            // Optionally, provide visual feedback that order is selected
-                            alert(`Order ${order.id} selected to be added.`);
-                        });
-                        orderSuggestionsDiv.appendChild(suggestionDiv);
-                    });
-                });
-        } else {
-            orderSuggestionsDiv.innerHTML = '';
-        }
+    orderSearchInput.addEventListener("keyup", function () {
+      const query = orderSearchInput.value;
+      if (query.length > 2) {
+        fetch(`/api/order-search/?query=${query}`)
+          .then((response) => response.json())
+          .then((data) => {
+            orderSuggestionsDiv.innerHTML = "";
+            data.forEach((order) => {
+              const suggestionDiv = document.createElement("div");
+              const displayText = `${order.id} - ${order.customer_name} (₹${order.amount})`;
+              suggestionDiv.innerHTML = displayText;
+              suggestionDiv.style.cursor = "pointer";
+              suggestionDiv.classList.add(
+                "list-group-item",
+                "list-group-item-action"
+              );
+
+              suggestionDiv.addEventListener("click", function () {
+                // --- IMPROVED UX: No more alert(). Add to Map and update display ---
+                selectedOrders.set(order.id.toString(), displayText);
+                updateSelectedOrdersDisplay();
+                orderSearchInput.value = ""; // Clear search input
+                orderSuggestionsDiv.innerHTML = ""; // Clear suggestions
+              });
+              orderSuggestionsDiv.appendChild(suggestionDiv);
+            });
+          });
+      } else {
+        orderSuggestionsDiv.innerHTML = "";
+      }
     });
 
     // Handle adding selected orders to the invoice
-    addSelectedOrdersBtn.addEventListener('click', function() {
-        if (selectedOrderIds.size > 0) {
-            const invoiceId = {{ invoice.id }}; // Get current invoice ID
-            fetch(`/invoices/${invoiceId}/add-orders/`, { // Assuming a new API endpoint for adding orders
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ order_ids: Array.from(selectedOrderIds) })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Orders added successfully!');
-                    selectedOrderIds.clear(); // Clear selected orders
-                    updateOrdersTable(); // Refresh the table
-                } else {
-                    alert('Error adding orders: ' + data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        } else {
-            alert('Please select orders to add.');
-        }
+    addSelectedOrdersBtn.addEventListener("click", function () {
+      const selectedOrderIds = Array.from(selectedOrders.keys());
+      if (selectedOrderIds.length > 0) {
+        fetch(addOrdersUrl, {
+          // --- FIXED: Use URL from data-* attribute ---
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken, // --- FIXED: Use the retrieved token ---
+          },
+          body: JSON.stringify({ order_ids: selectedOrderIds }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Orders added successfully!");
+              location.reload(); // Reload to see changes
+            } else {
+              alert("Error adding orders: " + data.message);
+            }
+          })
+          .catch((error) => console.error("Error:", error));
+      } else {
+        alert("Please select orders to add.");
+      }
     });
 
     // Handle removing orders from the invoice
-    document.querySelectorAll('.remove-order').forEach(button => {
-        button.addEventListener('click', function() {
-            const orderId = this.dataset.orderId;
-            const invoiceId = {{ invoice.id }};
-            if (confirm(`Are you sure you want to remove Order ${orderId} from this invoice?`)) {
-                fetch(`/invoices/${invoiceId}/remove-order/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify({ order_id: orderId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Order removed successfully!');
-                        updateOrdersTable(); // Refresh the table
-                    } else {
-                        alert('Error removing order: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
-        });
+    document.querySelectorAll(".remove-order").forEach((button) => {
+      button.addEventListener("click", function () {
+        const orderId = this.dataset.orderId;
+        if (
+          confirm(
+            `Are you sure you want to remove Order ${orderId} from this invoice?`
+          )
+        ) {
+          // --- FIXED: Construct the URL dynamically and correctly ---
+          // Assuming your remove URL is something like '/invoices/123/remove-order/'
+          // We will create the URL based on the data attribute
+          fetch(removeOrderUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken, // --- FIXED: Use the retrieved token ---
+            },
+            body: JSON.stringify({ order_id: orderId }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Order removed successfully!");
+                location.reload(); // Refresh the table
+              } else {
+                alert("Error removing order: " + data.message);
+              }
+            })
+            .catch((error) => console.error("Error:", error));
+        }
+      });
     });
-});
+  });
 </script>
 {% endblock %}

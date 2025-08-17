@@ -21,7 +21,7 @@
                         {% for order in orders %}
                         <tr>
                             <td>{{ order.id }}<input type="hidden" name="order_ids" value="{{ order.id }}"></td>
-                            <td>₹{{ order.amount }}</td>
+                            <td>₹{{ order.amount_in_rupees }}</td>
                             <td>{{ order.customer.name }}</td>
                             <td>{{ order.customer.phone }}</td>
                         </tr>

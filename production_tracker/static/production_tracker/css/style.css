@@ -503,3 +503,13 @@ form textarea:focus {
 .logout-button i {
   margin-right: 10px; /* Add margin to icon */
 }
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons .button {
+    padding: 5px 10px;
+    font-size: 12px;
+}

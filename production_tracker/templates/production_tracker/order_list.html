@@ -59,11 +59,12 @@
                     <td>{{ order.measurement.measurement_type|default:"N/A" }}</td>
                     <td>{{ order.status }}</td>
                     <td>{{order.completion_date}}</td>
-                    <td>₹{{ order.amount }}</td>
+                    <td>₹{{ order.amount_in_rupees }}</td>
                     <!-- <td>{{ order.specifications|default:"N/A" }}</td> -->
-                    <td>
+                    <td class="action-buttons">
                         <a href="{% url 'order_detail' order.pk %}" class="button">View</a>
                         <a href="{% url 'order_edit' order.pk %}" class="button">Edit</a>
+                        <a href="{% url 'order_delete' order.pk %}" class="button">Delete</a>
                     </td>
                 </tr>
             {% empty %}

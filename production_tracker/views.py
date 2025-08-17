@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.views import View
-from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, TemplateView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from .models import Order, OrderStage, Customer, Measurement, Vendor, PipelineStage, Invoice
 from .forms import OrderStageUpdateForm, OrderForm, CustomerForm, MeasurementForm, OrderStageCreateForm, OrderStatusUpdateForm, VendorForm, PipelineStageForm, InvoiceForm
@@ -172,7 +172,7 @@ class OrderSearchView(LoginRequiredMixin, View):
         orders = Order.objects.filter(
             Q(id__icontains=query) | Q(customer__name__icontains=query) | Q(customer__phone__icontains=query)
         ).select_related('customer')
-        results = [{'id': order.id, 'customer_name': order.customer.name, 'amount': order.amount} for order in orders]
+        results = [{'id': order.id, 'customer_name': order.customer.name, 'amount': order.amount_in_rupees} for order in orders]
         return JsonResponse(results, safe=False)
 
 class CustomLoginView(LoginView):
@@ -479,9 +479,9 @@ class InvoiceListView(LoginRequiredMixin, ListView):
         
         # Add display amounts for invoices
         for invoice in context['invoices']:
-            invoice.display_total_amount = invoice.total_amount / 100
-            invoice.display_paid_amount = invoice.paid_amount / 100
-            invoice.display_balance = invoice.balance / 100
+            invoice.display_total_amount = int(invoice.total_amount / 100)
+            invoice.display_paid_amount = int(invoice.paid_amount / 100)
+            invoice.display_balance = int(invoice.balance)
 
         return context
 
@@ -537,8 +537,8 @@ class CreateInvoiceView(LoginRequiredMixin, View):
                 redirect_url += '?' + urlencode(params, doseq=True)
                 return redirect(redirect_url)
 
-        total_amount = orders.aggregate(Sum('amount'))['amount__sum'] or 0
-        
+        total_amount = (orders.aggregate(Sum('amount'))['amount__sum'] or 0)
+
         if 'create_invoice' in request.POST:
             paid_amount = int(request.POST.get('paid_amount', 0)) * 100
             invoice = Invoice.objects.create(
@@ -552,7 +552,7 @@ class CreateInvoiceView(LoginRequiredMixin, View):
 
         return render(request, self.template_name, {
             'orders': orders,
-            'total_amount': total_amount,
+            'total_amount': total_amount / 100,
         })
 
 class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
@@ -567,11 +567,21 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
         context['invoice'] = self.object  # Pass the invoice object to the template
         return context
 
+class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
+    model = Invoice
+    template_name = 'production_tracker/invoice_confirm_delete.html'
+    success_url = reverse_lazy('invoice_list')
+
 class OrderCreateView(LoginRequiredMixin, CreateView):
     model = Order
     form_class = OrderForm
     template_name = 'production_tracker/order_form.html'
     success_url = reverse_lazy('order_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Order'
+        return context
 
     def form_valid(self, form):
         customer_id = self.request.POST.get('customer')
@@ -586,14 +596,19 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
 
         if measurement_id:
             if Order.objects.filter(measurement__id=measurement_id).exists():
-                messages.error(self.request, 'Order already exists for this measurement.')
-                # Re-render the form with empty fields
-                form = self.form_class() # Create a new empty form instance
-                return self.render_to_response(self.get_context_data(form=form))
+                messages.error(self.request, 'An order with this measurement already exists.')
+                return self.form_invalid(form)
+            
             measurement = get_object_or_404(Measurement, pk=measurement_id)
             form.instance.measurement = measurement
 
+        form.instance.total_amount = form.cleaned_data.get('amount', 0)
         return super().form_valid(form)
+
+class OrderDeleteView(LoginRequiredMixin, DeleteView):
+    model = Order
+    template_name = 'production_tracker/order_confirm_delete.html'
+    success_url = reverse_lazy('order_list')
 
 class OrderUpdateView(LoginRequiredMixin, UpdateView):
     model = Order

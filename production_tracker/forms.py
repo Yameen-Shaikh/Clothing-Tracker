@@ -79,28 +79,48 @@ class InvoiceForm(forms.ModelForm):
         model = Invoice
         fields = ['total_amount', 'paid_on_date', 'paid_amount']
         widgets = {
-            'paid_on_date': forms.DateInput(attrs={'type': 'date'}),
+            'paid_on_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'paid_amount': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance.pk: # If editing an existing invoice
-            self.fields['total_amount'].initial = self.instance.total_amount / 100
-            self.fields['paid_amount'].initial = self.instance.paid_amount / 100
+        
+        # --- CHANGE 1: More robust check and added safety for None values ---
+        # Check if we are editing an existing instance
+        if self.instance and self.instance.pk:
+            # Convert total_amount from paise to rupees for display, if it exists
+            if self.instance.total_amount is not None:
+                self.initial['total_amount'] = self.instance.total_amount / 100
 
-    def clean_total_amount(self):
-        total_amount = self.cleaned_data.get('total_amount')
-        if total_amount is not None:
-            return int(total_amount * 100) # Convert to paise
-        return total_amount
+            # Convert paid_amount from paise to rupees for display, if it exists
+            if self.instance.paid_amount is not None:
+                self.initial['paid_amount'] = self.instance.paid_amount / 100
 
-    def clean_paid_amount(self):
-        paid_amount = self.cleaned_data.get('paid_amount')
-        if paid_amount is not None:
-            return int(paid_amount * 100) # Convert to paise
-        return paid_amount
+    def save(self, commit=True):
+        """
+        Override the save method to handle currency conversion.
+        """
+        # Get the form's instance (the invoice object) but don't save it to the DB yet.
+        instance = super().save(commit=False)
 
+        # --- CHANGE 2: Convert submitted rupee values back to paise before saving ---
+        # Get the values from the cleaned_data dictionary
+        total_amount_rupees = self.cleaned_data.get('total_amount')
+        paid_amount_rupees = self.cleaned_data.get('paid_amount')
 
+        if total_amount_rupees is not None:
+            instance.total_amount = int(total_amount_rupees * 100)
+
+        if paid_amount_rupees is not None:
+            instance.paid_amount = int(paid_amount_rupees * 100)
+
+        # If commit is True, save the instance to the database.
+        if commit:
+            instance.save()
+            
+        return instance
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:
         model = OrderStage

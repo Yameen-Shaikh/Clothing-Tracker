@@ -14,8 +14,9 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `id`: AutoField (Primary Key)
 - `name`: CharField (max_length=100)
 - `email`: EmailField
-- `phone`: BigIntegerField (null=True, blank=True)
+- `phone`: BigIntegerField (null=True, blank=True, unique=True)
 - `address`: TextField (blank=True)
+- `gender`: CharField (max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], null=True, blank=True)
 
 ### Measurement
 - `id`: AutoField (Primary Key)
@@ -62,12 +63,10 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `id`: AutoField (Primary Key)
 - `customer`: ForeignKey to `Customer` (on_delete=models.CASCADE)
 - `order_placed_on`: DateField
-- `status`: CharField (max_length=20)
-- `completion_date`: DateField (null=True, blank=True, help_text="Date when the order was completed.")
+- `status`: CharField (max_length=20, choices=STATUS_CHOICES, default='New')
 - `specifications`: TextField (blank=True)
-- `crocky`: BinaryField (null=True, blank=True)
-- `crocky_mimetype`: CharField (max_length=50, null=True, blank=True)
-- `amount`: IntegerField (default=0, help_text="Total calculated amount for the order. Stored as integer, e.g., in cents/paise.")
+- `completion_date`: DateField (null=True, blank=True, help_text="Date when the order was completed.")
+- `amount`: IntegerField (default=0)
 - `total_amount`: IntegerField (default=0)
 - `invoice`: ForeignKey to `Invoice` (on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 - `measurement`: ForeignKey to `Measurement` (on_delete=models.SET_NULL, null=True, blank=True)
@@ -79,7 +78,7 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `assigned_vendor`: ForeignKey to `Vendor` (on_delete=models.SET_NULL, null=True, blank=True)
 - `start_date`: DateField
 - `end_date`: DateField (null=True, blank=True)
-- `status`: CharField (max_length=20)
+- `status`: CharField (max_length=20, choices=STATUS_CHOICES, default='New')
 - `note`: TextField (blank=True, help_text="Any additional notes for this stage.")
 
 ### Invoice
@@ -88,18 +87,10 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `paid_on_date`: DateField (null=True, blank=True)
 - `paid_amount`: IntegerField (default=0)
 
-### Particulars
-- `id`: AutoField (Primary Key)
-- `order`: ForeignKey to `Order` (on_delete=models.CASCADE, related_name='particulars')
-- `name`: CharField (max_length=20, help_text="Name or description of the particular item.")
-- `details`: CharField (max_length=100, blank=True, help_text="Additional details about the particular item.")
-- `amount`: IntegerField (help_text="Amount for this particular item. Stored as integer, e.g., in cents/paise.")
-
 ## Django Admin Configuration
 - All models are registered with the Django admin (`production_tracker/admin.py`).
 - `OrderAdmin` uses `OrderStageInline` for direct editing of `OrderStage` records.
 - Custom `list_display` is configured for `Order`, `Customer`, and `Vendor` models.
-- `VendorAdmin` now uses a default form that displays `PipelineStage` objects for the `role` field.
 
 ## Django Rest Framework (DRF) & Simple JWT
 - DRF and `djangorestframework-simplejwt` are installed and configured in `clothing_factory/settings.py`.
@@ -113,6 +104,8 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `/orders/`: `OrderListView` (List all orders, with status filtering)
 - `/orders/new/`: `OrderCreateView` (Create new order)
 - `/orders/<int:pk>/`: `OrderDetailView` (View single order details, update OrderStage, add new OrderStage)
+- `/orders/<int:pk>/edit/`: `OrderUpdateView` (Edit single order details)
+- `/orders/<int:pk>/delete/`: `OrderDeleteView` (Delete single order)
 - `/order-stage/<int:pk>/update/`: `UpdateOrderStageView` (Update OrderStage status/vendor)
 - `/customers/`: `CustomerListView` (List all customers)
 - `/customers/new/`: `CustomerCreateView` (Create new customer)
@@ -125,6 +118,8 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 - `/vendors/`: `VendorListView` (List all vendors)
 - `/pipeline-stages/`: `PipelineStageListView` (List all pipeline stages)
 - `/invoices/`: `InvoiceListView` (List all invoices)
+- `/invoices/<int:pk>/edit/`: `InvoiceUpdateView` (Edit single invoice)
+- `/invoices/<int:pk>/delete/`: `InvoiceDeleteView` (Delete single invoice)
 
 ## Server-Side Rendered Views & Templates
 All views are protected by `LoginRequiredMixin`.
@@ -133,6 +128,8 @@ All views are protected by `LoginRequiredMixin`.
     - `OrderListView` (`order_list.html`): Lists all orders with status and customer filtering (Pending, In Progress, Completed).
     - `OrderDetailView` (`order_detail.html`): Displays single order details, including associated `OrderStage` and `Particulars` records. Allows updating existing `OrderStage` status/vendor and adding new `OrderStage` records via forms.
     - `OrderCreateView` (`order_form.html`): Form for creating new orders with customer search.
+    - `OrderUpdateView` (`order_form.html`): Form for updating existing orders.
+    - `OrderDeleteView` (`order_confirm_delete.html`): Confirmation page for deleting orders.
 - **Customers:**
     - `CustomerListView` (`customer_list.html`): Lists all customers.
     - `CustomerCreateView` (`customer_form.html`): Form for creating new customers.
@@ -143,6 +140,11 @@ All views are protected by `LoginRequiredMixin`.
     - `MeasurementDetailView` (`measurement_form.html`): View for displaying a single measurement's details.
     - `MeasurementUpdateView` (`measurement_form.html`): Form for updating an existing measurement.
 - **Other List Views:** `VendorRoleListView`, `VendorListView`, `PipelineStageListView`, `InvoiceListView` with corresponding templates.
+- **Invoices:**
+    - `InvoiceListView` (`invoice_list.html`): Lists all invoices.
+    - `CreateInvoiceView` (`create_invoice.html`): Form for creating new invoices from a selection of orders.
+    - `InvoiceUpdateView` (`invoice_edit.html`): Form for updating existing invoices.
+    - `InvoiceDeleteView` (`invoice_confirm_delete.html`): Confirmation page for deleting invoices.
 
 ## UI/UX Theme
 - **Theme:** Mughal cultural theme (reinstated).
@@ -162,44 +164,11 @@ All views are protected by `LoginRequiredMixin`.
 - Logout functionality is available.
 
 ## Recent Changes
-- **Model Changes:**
-    - `Vendor` model's `role` field now directly links to `PipelineStage`.
-    - `VendorRole` model was introduced and then its relationship with `Vendor` was removed.
-    - `OrderStage` model's `remark` field was replaced with `note`.
-- **Admin Interface:**
-    - The "role" field in the Django admin for `Vendor` now displays `PipelineStage` objects.
-    - All admin buttons are styled consistently with the main application's dark gold theme.
-- **Order Management Logic:**
-    - Order status now dynamically updates based on the status of its associated `OrderStage`s (In-Progress, Completed, Pending).
-    - Prevention of duplicate `OrderStage` entries for the same `Order` and `PipelineStage`.
-    - Prevention of creating new `Order`s with `Measurement`s already linked to another `Order`.
-    - Automatic progression of `OrderStage` status (next stage becomes "In-Progress" when current is "Completed").
-- **Dynamic Vendor Filtering:**
-    - The "Assigned Vendor" dropdown in the "Add New Stage" form now dynamically displays vendors related to the selected `PipelineStage` via an AJAX call.
-- **Bug Fixes:**
-    - Fixed `NoReverseMatch` error for `invoice_detail` by changing the URL name in `order_detail.html` to `invoice_edit` and updating the displayed field to `invoice.id`.
-    - Fixed CSRF token missing error in `customer_form.html`.
-    - Fixed `FieldError` due to `remark` field removal in `OrderStage` and `Vendor` models.
-- **Button Styling (Frontend):**
-    - All buttons in the main application are styled consistently with the dark gold theme.
-    - "Filter" button changed to "Search" in `measurement_list.html` and `order_list.html`.
-    - "View" and "Edit" actions in `measurement_list.html` are now styled as buttons with spacing.
-    - Button text changes in `customer_form.html`, `measurement_form.html`, `create_invoice.html`, `invoice_edit.html`, and `order_list.html`.
-- **Agent-Made Changes:**
-    - **Dynamic Vendor Filtering in Order Stages:**
-        - Added `get_vendors_by_stage` view and URL (`/vendors/by-stage/<int:stage_id>/`).
-        - Updated `order_detail.html` and `order_stage_manage.html` to dynamically filter vendors based on selected stage using AJAX.
-    - **Order Creation Validation:**
-        - Reverted `measurement` field from `OrderForm` in `production_tracker/forms.py`.
-        - Modified `OrderCreateView` in `production_tracker/views.py` to prevent duplicate orders for the same measurement, displaying a popup message (`messages.error`) and clearing the form fields.
-    - **Invoice Functionality Enhancements:**
-        - Added search by order ID to `InvoiceListView` (`invoice_list.html` and `production_tracker/views.py`).
-        - Implemented validation in `CreateInvoiceView` to prevent creating invoices with already-invoiced orders, displaying a popup message (`messages.error`).
-        - Improved `CreateInvoiceView` and `PickOrdersView` to retain state (search query and selected orders) on `pick_orders.html` after validation errors.
-    - **Order Edit Functionality:**
-        - Added "Edit" button to `OrderListView` (`order_list.html`).
-        - Added `order_edit` URL pattern (`/orders/<int:pk>/update/`).
-        - Created `OrderUpdateView` in `production_tracker/views.py` to handle order editing.
+- **Amount Calculation:** Fixed amount display issues across the application to correctly handle paise and rupee conversions.
+- **Order Deletion:** Added functionality to delete orders, including a confirmation page.
+- **Invoice Deletion:** Added functionality to delete invoices, including a confirmation page.
+- **UI/UX:** Made small adjustments to button sizes and layout.
+- **Bug Fixes:** Fixed a template error in `invoice_edit.html`.
 
 ## Next Steps/Pending Actions
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

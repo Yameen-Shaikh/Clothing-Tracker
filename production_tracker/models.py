@@ -114,8 +114,13 @@ class Order(models.Model):
     specifications = models.TextField(blank=True)
     completion_date = models.DateField(null=True, blank=True, help_text="Date when the order was completed.")
     amount = models.IntegerField(default=0)
+    total_amount = models.IntegerField(default=0)
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     measurement = models.ForeignKey(Measurement, on_delete=models.SET_NULL, null=True, blank=True)
+
+    @property
+    def amount_in_rupees(self):
+        return self.amount / 100
 
 class OrderStage(models.Model):
     STATUS_CHOICES = [
@@ -143,5 +148,5 @@ class Invoice(models.Model):
 
     @property
     def balance(self):
-        return self.total_amount - self.paid_amount
+        return int((self.total_amount - self.paid_amount) / 100)
 

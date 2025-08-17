@@ -42,6 +42,7 @@
       </td>
       <td>
         <a href="{% url 'invoice_edit' invoice.id %}" class="button">Edit</a>
+        <a href="{% url 'invoice_delete' invoice.id %}" class="button">Delete</a>
       </td>
     </tr>
     {% endfor %}

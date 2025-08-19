@@ -56,6 +56,7 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
         search_address = request.GET.get('search_address', '')
 
         customer = None
+        view_only = False # Initialize view_only
         form = self.form_class()
         customers = Customer.objects.none() # Start with an empty queryset
 
@@ -70,7 +71,8 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
 
         if customer_id:
             customer = get_object_or_404(Customer, pk=customer_id)
-            form = self.form_class(instance=customer)
+            view_only = request.GET.get('view_only', 'false').lower() == 'true'
+            form = self.form_class(instance=customer, read_only=view_only)
         
         # Check for success message
         success_message = request.session.pop('success_message', None)
@@ -84,6 +86,7 @@ class CustomerDetailUpdateView(LoginRequiredMixin, View):
             'search_gender': search_gender,
             'search_address': search_address,
             'gender_choices': Customer.GENDER_CHOICES,
+            'view_only': view_only, # Pass view_only to the template
         })
 
     def post(self, request, *args, **kwargs):
@@ -293,6 +296,8 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from django.db import connection
+        print(self.object.orderstage_set.filter(status='In-Progress').query)
         context['order_status_form'] = OrderStatusUpdateForm(instance=self.object)
         context['current_stage'] = self.object.orderstage_set.filter(status='In-Progress').first()
         return context
@@ -384,12 +389,11 @@ class MeasurementListView(LoginRequiredMixin, ListView):
     context_object_name = 'measurements'
 
     def get_queryset(self):
+        queryset = super().get_queryset().select_related('customer')
         customer_id = self.request.GET.get('customer')
         if customer_id:
-            queryset = super().get_queryset().select_related('customer')
             queryset = queryset.filter(customer__id=customer_id)
-            return queryset
-        return Measurement.objects.none()
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -687,7 +691,7 @@ class MeasurementCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         customer_id = self.request.POST.get('customer')
         if not customer_id:
-            form.add_error('customer', 'Please select a customer.')
+            form.add_error(None, 'Please select a customer.')
             return self.form_invalid(form)
 
         customer = get_object_or_404(Customer, pk=customer_id)

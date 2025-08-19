@@ -5,7 +5,8 @@
         <div class="filter-group">
             <label for="search_name">Search customer:</label>
             <input type="text" id="search_name" name="search_name" value="{{ search_name }}" placeholder="Search by name or phone...">
-            <div id="customer-name-suggestions" class="custom-search-results"></div>
+            <input type="hidden" id="selected-customer-id" name="selected_customer_id" value="">
+            <div id="customer-search-results" class="custom-search-results"></div>
         </div>
         <div class="filter-group">
             <label for="search_gender">Gender:</label>
@@ -25,33 +26,61 @@
 
     
 
-    <div id="customer-search-results" class="custom-search-results">
-        {% for cust in customers %}
-            <div data-customer-id="{{ cust.id }}">{{ cust.name }} - {{ cust.phone }}</div>
-        {% empty %}
+    <div class="customer-results-table">
+        {% if customers %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Gender</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cust in customers %}
+                        <tr>
+                            <td>{{ cust.name }}</td>
+                            <td>{{ cust.email }}</td>
+                            <td>{{ cust.phone }}</td>
+                            <td>{{ cust.address }}</td>
+                            <td>{{ cust.gender }}</td>
+                            <td>
+                                <a href="{% url 'customer_search_detail' %}?customer_id={{ cust.id }}&view_only=true" class="button">View</a>
+                                <a href="{% url 'customer_search_detail' %}?customer_id={{ cust.id }}" class="button">Edit</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
             {% if search_name or search_gender or search_address %}
                 <p>No customers found for your search criteria.</p>
             {% endif %}
-        {% endfor %}
+        {% endif %}
     </div>
 
-    <input type="hidden" id="selected-customer-id" value="{% if customer %}{{ customer.id }}{% endif %}>
-    
-    <div id="customer-details-section" {% if not customer %}style="display:none;"{% endif %}>
-        <form method="post" id="customer-detail-form">
-            {% csrf_token %}
-            <input type="hidden" name="customer_id" value="{{ customer.id }}">
-            {{ form.as_p }}
-            <button type="submit" class="button">Save Changes</button>
-        </form>
-    </div>
+    {% if customer %}
+        <div id="customer-details-section">
+            <h2>{% if view_only %}View Customer Details{% else %}Edit Customer Details{% endif %}</h2>
+            <form method="post" id="customer-detail-form">
+                {% csrf_token %}
+                <input type="hidden" name="customer_id" value="{{ customer.id }}">
+                {{ form.as_p }}
+                {% if not view_only %}
+                    <button type="submit" class="button">Save Changes</button>
+                {% endif %}
+            </form>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchNameInput = document.getElementById('search_name');
-    const customerNameSuggestions = document.getElementById('customer-name-suggestions');
     const customerSearchResults = document.getElementById('customer-search-results');
     const customerDetailsSection = document.getElementById('customer-details-section');
 
@@ -76,26 +105,27 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/api/customer-search/?query=${query}`)
                 .then(response => response.json())
                 .then(data => {
-                    customerNameSuggestions.innerHTML = '';
+                    customerSearchResults.innerHTML = '';
                     data.forEach(customer => {
                         const suggestionDiv = document.createElement('div');
                         suggestionDiv.innerHTML = `${customer.name} - ${customer.phone}`;
                         suggestionDiv.style.cursor = 'pointer';
                         suggestionDiv.addEventListener('click', function() {
                             searchNameInput.value = customer.name;
-                            customerNameSuggestions.innerHTML = '';
+                            document.getElementById('selected-customer-id').value = customer.id; // Set the hidden input value
+                            customerSearchResults.innerHTML = '';
                         });
-                        customerNameSuggestions.appendChild(suggestionDiv);
+                        customerSearchResults.appendChild(suggestionDiv);
                     });
                 });
         } else {
-            customerNameSuggestions.innerHTML = '';
+            customerSearchResults.innerHTML = '';
         }
     });
 
     // Clear suggestions when the form is submitted
     document.querySelector('.filter-form').addEventListener('submit', function() {
-        customerNameSuggestions.innerHTML = '';
+        customerSearchResults.innerHTML = '';
     });
 
     const successMessage = "{{ success_message|escapejs }}";

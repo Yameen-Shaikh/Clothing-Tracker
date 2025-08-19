@@ -122,6 +122,10 @@ class Order(models.Model):
     def amount_in_rupees(self):
         return self.amount / 100
 
+    @property
+    def total_amount_in_rupees(self):
+        return self.total_amount / 100
+
 class OrderStage(models.Model):
     STATUS_CHOICES = [
         ('New', 'New'),

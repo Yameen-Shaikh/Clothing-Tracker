@@ -18,6 +18,12 @@ class OrderStageUpdateForm(forms.ModelForm):
         }
 
 class OrderForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            if self.instance.amount is not None:
+                self.initial['amount'] = self.instance.amount / 100
+
     class Meta:
         model = Order
         fields = ['order_placed_on', 'completion_date', 'specifications', 'amount']
@@ -34,6 +40,14 @@ class OrderForm(forms.ModelForm):
         return amount
 
 class CustomerForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        self.read_only = kwargs.pop('read_only', False)
+        super().__init__(*args, **kwargs)
+        if self.read_only:
+            for field_name, field in self.fields.items():
+                field.widget.attrs['readonly'] = 'readonly'
+                field.widget.attrs['disabled'] = 'disabled'
+
     class Meta:
         model = Customer
         fields = ['name', 'email', 'phone', 'address', 'gender']
@@ -121,10 +135,11 @@ class InvoiceForm(forms.ModelForm):
             instance.save()
             
         return instance
+    
 class OrderStageCreateForm(forms.ModelForm):
     class Meta:
         model = OrderStage
-        fields = ['stage', 'assigned_vendor', 'start_date', 'end_date', 'note']
+        fields = ['stage', 'assigned_vendor', 'start_date', 'end_date']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'})

@@ -500,10 +500,10 @@ class PickOrdersView(LoginRequiredMixin, View):
         query = request.GET.get('q', '')
         selected_order_ids = request.GET.getlist('order_ids') # Get list of selected order IDs
 
-        orders = Order.objects.none()
+        orders = Order.objects.filter(invoice__isnull=True) # Filter out orders already associated with an invoice
         if query:
             customers = Customer.objects.filter(Q(name__icontains=query) | Q(phone__icontains=query))
-            orders = Order.objects.filter(customer__in=customers)
+            orders = orders.filter(customer__in=customers)
         
         # Mark selected orders
         for order in orders:
@@ -529,7 +529,7 @@ class CreateInvoiceView(LoginRequiredMixin, View):
                 redirect_url += f'?q={query}'
             return redirect(redirect_url)
 
-        orders = Order.objects.filter(id__in=order_ids)
+        orders = Order.objects.filter(id__in=order_ids).select_related('customer')
 
         # Check if any selected order is already associated with an invoice
         for order in orders:
@@ -554,8 +554,16 @@ class CreateInvoiceView(LoginRequiredMixin, View):
             messages.success(request, 'Invoice created successfully.')
             return redirect('invoice_list')
 
+        # Group orders by customer
+        grouped_orders = {}
+        for order in orders:
+            if order.customer in grouped_orders:
+                grouped_orders[order.customer].append(order)
+            else:
+                grouped_orders[order.customer] = [order]
+
         return render(request, self.template_name, {
-            'orders': orders,
+            'grouped_orders': grouped_orders,
             'total_amount': total_amount / 100,
         })
 

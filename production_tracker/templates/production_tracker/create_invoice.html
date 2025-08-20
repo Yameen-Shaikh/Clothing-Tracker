@@ -8,26 +8,27 @@
         <div class="card-body">
             <form method="post" action="{% url 'create_invoice' %}">
                 {% csrf_token %}
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Amount</th>
-                            <th>Customer Name</th>
-                            <th>Mobile Number</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                        <tr>
-                            <td>{{ order.id }}<input type="hidden" name="order_ids" value="{{ order.id }}"></td>
-                            <td>₹{{ order.amount_in_rupees }}</td>
-                            <td>{{ order.customer.name }}</td>
-                            <td>{{ order.customer.phone }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% for customer, orders in grouped_orders.items %}
+                    <h3>{{ customer.name }}</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Amount</th>
+                                <th>Mobile Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ order.id }}<input type="hidden" name="order_ids" value="{{ order.id }}"></td>
+                                <td>₹{{ order.amount_in_rupees }}</td>
+                                <td>{{ order.customer.phone }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endfor %}
 
                 <div class="row">
                     <div class="col-md-6">

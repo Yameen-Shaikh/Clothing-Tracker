@@ -152,5 +152,5 @@ class Invoice(models.Model):
 
     @property
     def balance(self):
-        return int((self.total_amount - self.paid_amount) / 100)
+        return float((self.total_amount - self.paid_amount) / 100)
 

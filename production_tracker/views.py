@@ -30,8 +30,18 @@ class AddOrdersToInvoiceView(LoginRequiredMixin, View):
         
         orders_to_add = Order.objects.filter(id__in=order_ids)
         invoice.orders.add(*orders_to_add)
+
+        # Recalculate total amount
+        new_total_amount = invoice.orders.aggregate(Sum('amount'))['amount__sum'] or 0
+        invoice.total_amount = new_total_amount
+        invoice.save()
         
-        return JsonResponse({'success': True, 'message': 'Orders added successfully.'})
+        return JsonResponse({
+            'success': True, 
+            'message': 'Orders added successfully.',
+            'new_total_amount': invoice.total_amount / 100,
+            'new_balance': invoice.balance
+        })
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RemoveOrderFromInvoiceView(LoginRequiredMixin, View):
@@ -42,8 +52,18 @@ class RemoveOrderFromInvoiceView(LoginRequiredMixin, View):
         
         order_to_remove = get_object_or_404(Order, pk=order_id)
         invoice.orders.remove(order_to_remove)
+
+        # Recalculate total amount
+        new_total_amount = invoice.orders.aggregate(Sum('amount'))['amount__sum'] or 0
+        invoice.total_amount = new_total_amount
+        invoice.save()
         
-        return JsonResponse({'success': True, 'message': 'Order removed successfully.'})
+        return JsonResponse({
+            'success': True, 
+            'message': 'Order removed successfully.',
+            'new_total_amount': invoice.total_amount / 100,
+            'new_balance': invoice.balance
+        })
 
 class CustomerDetailUpdateView(LoginRequiredMixin, View):
     template_name = 'production_tracker/customer_search_detail.html'
@@ -206,12 +226,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Order Analytics
-        pending_orders = Order.objects.filter(status='Pending').count()
+        new_orders = Order.objects.filter(status='New').count()
         in_progress_orders = Order.objects.filter(status='In-Progress').count()
         completed_orders = Order.objects.filter(status='Completed').count()
         
-        context['total_orders'] = pending_orders + in_progress_orders + completed_orders
-        context['pending_orders'] = pending_orders
+        context['total_orders'] = Order.objects.count()
+        context['new_orders'] = new_orders
         context['in_progress_orders'] = in_progress_orders
         context['completed_orders'] = completed_orders
         context['recent_orders'] = Order.objects.order_by('-order_placed_on')[:5]
@@ -236,8 +256,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         # Chart data
         context['order_status_data'] = {
-            'labels': ['Pending', 'In Progress', 'Completed'],
-            'data': [pending_orders, in_progress_orders, completed_orders],
+            'labels': ['New', 'In Progress', 'Completed'],
+            'data': [new_orders, in_progress_orders, completed_orders],
         }
         context['invoice_status_data'] = {
             'labels': ['Paid', 'Unpaid'],
@@ -579,6 +599,19 @@ class InvoiceUpdateView(LoginRequiredMixin, UpdateView):
         context['invoice'] = self.object  # Pass the invoice object to the template
         return context
 
+class InvoiceOrdersView(LoginRequiredMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        orders = invoice.orders.all().select_related('customer')
+        results = [{
+            'id': order.id,
+            'amount_in_rupees': order.amount_in_rupees,
+            'customer_name': order.customer.name,
+            'customer_phone': order.customer.phone,
+            'order_detail_url': reverse('order_detail', args=[order.id])
+        } for order in orders]
+        return JsonResponse(results, safe=False)
+
 class InvoiceDeleteView(LoginRequiredMixin, DeleteView):
     model = Invoice
     template_name = 'production_tracker/invoice_confirm_delete.html'
@@ -736,3 +769,15 @@ class MeasurementDetailView(LoginRequiredMixin, DetailView):
             form.fields[field].widget.attrs['disabled'] = True
         context['form'] = form
         return context
+
+class MeasurementDeleteView(LoginRequiredMixin, DeleteView):
+    model = Measurement
+    template_name = 'production_tracker/measurement_confirm_delete.html'
+    success_url = reverse_lazy('measurement_list')
+
+    def delete(self, request, *args, **kwargs):
+        measurement = self.get_object()
+        if measurement.order_set.exists():
+            messages.error(request, 'This measurement is associated with an order and cannot be deleted.')
+            return redirect('measurement_list')
+        return super().delete(request, *args, **kwargs)

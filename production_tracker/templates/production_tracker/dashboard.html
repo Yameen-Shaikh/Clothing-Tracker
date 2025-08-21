@@ -12,8 +12,8 @@
       <p>{{ total_orders }}</p>
     </div>
     <div class="card">
-      <h3>Pending Orders</h3>
-      <p>{{ pending_orders }}</p>
+      <h3>New Orders</h3>
+      <p>{{ new_orders }}</p>
     </div>
     <div class="card">
       <h3>In Progress Orders</h3>
@@ -124,9 +124,9 @@
         {
           data: orderStatusData.data,
           backgroundColor: [
-            "#cb4b16", // Terracotta
-            "#4682B4", // Steel Blue
-            "#B8860B", // Dark Gold
+            "#FFD700", // Gold for New
+            "#4682B4", // Steel Blue for In Progress
+            "#B8860B", // Dark Goldenrod for Completed
           ],
           hoverOffset: 4,
         },

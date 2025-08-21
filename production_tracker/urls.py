@@ -34,6 +34,7 @@ urlpatterns = [
     path('measurements/', MeasurementListView.as_view(), name='measurement_list'),
     path('measurements/new/', MeasurementCreateView.as_view(), name='measurement_new'),
     path('measurements/<int:pk>/edit/', MeasurementUpdateView.as_view(), name='measurement_edit'),
+    path('measurements/<int:pk>/delete/', views.MeasurementDeleteView.as_view(), name='measurement_delete'),
     path('measurements/<int:pk>/', MeasurementDetailView.as_view(), name='measurement_detail'),
 
     path('vendors/', VendorListView.as_view(), name='vendor_list'),
@@ -46,6 +47,7 @@ urlpatterns = [
     path('invoices/pick-orders/', PickOrdersView.as_view(), name='pick_orders'),
     path('invoices/create/', CreateInvoiceView.as_view(), name='create_invoice'),
     path('invoices/<int:pk>/edit/', InvoiceUpdateView.as_view(), name='invoice_edit'),
+    path('invoices/<int:pk>/orders/', views.InvoiceOrdersView.as_view(), name='invoice_orders'),
     path('invoices/<int:pk>/delete/', InvoiceDeleteView.as_view(), name='invoice_delete'),
     path('invoices/<int:pk>/add-orders/', AddOrdersToInvoiceView.as_view(), name='add_orders_to_invoice'),
     path('invoices/<int:pk>/remove-order/', RemoveOrderFromInvoiceView.as_view(), name='remove_order_from_invoice'),

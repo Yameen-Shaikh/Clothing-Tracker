@@ -2,6 +2,7 @@
 {% block content %}
     <h1>Search and Edit Customer</h1>
     <form class="filter-form" method="get">
+        {% csrf_token %}
         <div class="filter-group">
             <label for="search_name">Search customer:</label>
             <input type="text" id="search_name" name="search_name" value="{{ search_name }}" placeholder="Search by name or phone...">

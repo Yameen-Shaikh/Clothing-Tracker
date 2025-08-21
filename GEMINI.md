@@ -5,7 +5,7 @@ This document summarizes the current state of the `Clothes-Production-Tracker` D
 ## Project Setup
 - **Project Name:** `clothing_factory`
 - **App Name:** `production_tracker`
-- **Virtual Environment:** `.venv` (activated using `source .venv/bin/activate`)
+- **Virtual Environment:** `venv` (activated using `source venv/bin/activate`)
 - **Dependencies:** `requirements.txt` (Django, psycopg2-binary, gunicorn, djangorestframework, djangorestframework-simplejwt)
 
 ## Database Schema (`production_tracker/models.py`)
@@ -164,11 +164,17 @@ All views are protected by `LoginRequiredMixin`.
 - Logout functionality is available.
 
 ## Recent Changes
-- **Amount Calculation:** Fixed amount display issues across the application to correctly handle paise and rupee conversions.
+- **Dashboard Analytics:** Updated order status counts to only include (New, In Progress, Completed) and adjusted the dashboard chart accordingly. "Total Orders" now displays the count of all orders in the system.
+- **Invoice Creation Filter:** Added filter for orders to display unpaid or new orders only when creating invoices.
+- **Amount Handling:** Implemented currency conversion (rupees to paise and vice-versa) in `OrderForm` and `InvoiceForm` for `amount` and `total_amount` fields, allowing decimal input/display while storing as integers.
+- **Static Files Configuration:** Configured `STATICFILES_DIRS` to locate app static files and integrated WhiteNoise for serving static files in production.
 - **Order Deletion:** Added functionality to delete orders, including a confirmation page.
 - **Invoice Deletion:** Added functionality to delete invoices, including a confirmation page.
 - **UI/UX:** Made small adjustments to button sizes and layout.
 - **Bug Fixes:** Fixed a template error in `invoice_edit.html`.
+- **Order Stage Creation:** Removed the 'note' field from the 'Add New Stage' form.
+- **Dashboard Display Fix:** Corrected an issue where the "New Orders" count was not displayed on the dashboard by ensuring the `new_orders` variable is passed to the template context in `DashboardView`.
 
 ## Next Steps/Pending Actions
+- **Dashboard Display Issue:** The 'New Orders' count on the dashboard may not be displaying figures correctly due to client-side caching. Backend counts are verified as accurate. Users should perform a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear browser cache.
 - User needs to run `python3 manage.py createsuperuser` manually to create an admin user for testing.

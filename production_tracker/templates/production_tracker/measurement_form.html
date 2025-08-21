@@ -36,6 +36,8 @@
 
         {% if not read_only %}
             <button type="submit" class="button">Create</button>
+        {% else %}
+            <a href="{% url 'measurement_delete' measurement.pk %}" class="button">Delete</a>
         {% endif %}
     </form>
 

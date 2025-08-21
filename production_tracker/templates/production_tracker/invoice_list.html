@@ -2,6 +2,7 @@
 <h1>Invoices</h1>
 
 <form method="get" class="form-inline mb-3">
+  {% csrf_token %}
   <div class="form-group mr-2">
     <label for="order_id" class="sr-only">Search by Order ID</label>
     <input
@@ -42,7 +43,9 @@
       </td>
       <td>
         <a href="{% url 'invoice_edit' invoice.id %}" class="button">Edit</a>
-        <a href="{% url 'invoice_delete' invoice.id %}" class="button">Delete</a>
+        <a href="{% url 'invoice_delete' invoice.id %}" class="button"
+          >Delete</a
+        >
       </td>
     </tr>
     {% endfor %}

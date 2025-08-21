@@ -1,0 +1,11 @@
+{% extends 'production_tracker/base.html' %}
+
+{% block content %}
+    <h1>Delete Measurement</h1>
+    <p>Are you sure you want to delete the measurement for {{ measurement.customer.name }} of type {{ measurement.measurement_type }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button">Delete</button>
+        <a href="{% url 'measurement_list' %}" class="button">Cancel</a>
+    </form>
+{% endblock %}
